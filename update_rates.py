@@ -33,6 +33,8 @@ BLOCK_RE = re.compile(
 
 FINLIFE_BASE = "https://finlife.fss.or.kr/finlifeapi"
 TOP_FIN_GRP = "020000"  # 은행권
+# finlife 웹방화벽이 비브라우저 User-Agent 요청을 응답 없이 끊으므로 브라우저 UA 필수
+UA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"}
 
 
 def load_embedded():
@@ -58,7 +60,8 @@ def fetch_finlife(api_name, auth_key):
     while True:
         url = (f"{FINLIFE_BASE}/{api_name}.json"
                f"?auth={auth_key}&topFinGrpNo={TOP_FIN_GRP}&pageNo={page}")
-        with urllib.request.urlopen(url, timeout=30) as res:
+        req = urllib.request.Request(url, headers=UA_HEADERS)
+        with urllib.request.urlopen(req, timeout=30) as res:
             payload = json.loads(res.read().decode("utf-8"))
         result = payload.get("result", {})
         if result.get("err_cd") not in ("000", None):
