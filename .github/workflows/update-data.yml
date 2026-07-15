@@ -1,0 +1,29 @@
+# 매일 아침 finlife API로 시중은행 금리를 갱신해 커밋한다.
+# GitHub Pages 배포 후 저장소 Settings → Secrets → FINLIFE_API_KEY 등록 필요.
+# (키 미등록 시 이 워크플로는 실패하며, 앱은 마지막 커밋된 데이터를 그대로 사용한다)
+name: update-loan-data
+
+on:
+  schedule:
+    - cron: "0 21 * * *"   # 매일 06:00 KST
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch latest rates from finlife
+        run: python update_rates.py --fetch "${{ secrets.FINLIFE_API_KEY }}"
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html loan_products.json
+          git diff --cached --quiet || git commit -m "chore: 대출 데이터 자동 갱신 ($(date +%F))"
+          git push
