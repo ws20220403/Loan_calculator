@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주택 대출 계산기</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --card: #ffffff; --ink: #1f2937; --sub: #6b7280;
+    --line: #e5e7eb; --accent: #2563eb; --accent-soft: #eff6ff;
+    --good: #059669; --warn: #d97706; --bad: #dc2626;
+    --good-bg: #ecfdf5; --warn-bg: #fffbeb; --bad-bg: #fef2f2;
+    --policy: #7c3aed; --policy-bg: #f5f3ff; --bank: #0891b2; --bank-bg: #ecfeff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.55; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 16px 14px 60px; }
+  header.app { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  header.app h1 { font-size: 1.3rem; }
+  header.app .data-date { font-size: 0.78rem; color: var(--sub); }
+  .mini-btn { font-size: 0.72rem; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--sub); cursor: pointer; }
+  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .banner { background: var(--accent-soft); border: 1px solid #bfdbfe; color: #1e40af; border-radius: 10px; padding: 9px 12px; font-size: 0.8rem; margin-bottom: 12px; }
+  .banner.stale { background: var(--warn-bg); border-color: #fcd34d; color: #92400e; }
+  /* 탭 */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tabs button { flex: 1; padding: 10px 0; border: 1px solid var(--line); background: var(--card); border-radius: 10px; font-size: 0.92rem; cursor: pointer; color: var(--sub); font-weight: 600; }
+  .tabs button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  section.panel { display: none; }
+  section.panel.active { display: block; }
+  /* 카드/폼 */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 1.02rem; margin-bottom: 4px; }
+  .card .desc { font-size: 0.8rem; color: var(--sub); margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 0.82rem; font-weight: 700; }
+  .field label .req { color: var(--bad); }
+  .field input, .field select { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.95rem; width: 100%; background: #fff; color: var(--ink); }
+  .field input:focus, .field select:focus { outline: 2px solid #bfdbfe; border-color: var(--accent); }
+  .field .hint { font-size: 0.75rem; color: var(--sub); min-height: 1em; }
+  .field .err { font-size: 0.75rem; color: var(--bad); display: none; }
+  .field.invalid input, .field.invalid select { border-color: var(--bad); }
+  .field.invalid .err { display: block; }
+  .seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg label { flex: 1; text-align: center; padding: 9px 4px; font-size: 0.88rem; cursor: pointer; background: #fff; color: var(--sub); font-weight: 600; border-left: 1px solid var(--line); }
+  .seg label:first-child { border-left: none; }
+  .seg input { display: none; }
+  .seg label:has(input:checked) { background: var(--accent-soft); color: var(--accent); }
+  .btn { display: inline-block; padding: 12px 20px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; }
+  .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .btn.ghost { background: #fff; color: var(--accent); border: 1px solid var(--accent); font-size: 0.85rem; padding: 9px 14px; width: auto; }
+  .btn-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .save-note { font-size: 0.78rem; color: var(--good); margin-top: 8px; text-align: center; display: none; }
+  .ls-warn { font-size: 0.78rem; color: var(--warn); margin-top: 8px; text-align: center; display: none; }
+  /* 툴팁 */
+  .tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #e5e7eb; color: var(--sub); font-size: 10px; border: none; cursor: help; vertical-align: 1px; position: relative; margin-left: 3px; }
+  .tip:hover::after, .tip:focus::after { content: attr(data-tip); position: absolute; bottom: 135%; left: 50%; transform: translateX(-50%); background: #111827; color: #fff; padding: 6px 9px; border-radius: 6px; width: max-content; max-width: 230px; font-size: 11px; font-weight: 400; z-index: 60; white-space: normal; text-align: left; line-height: 1.4; }
+  /* 우대 조건 */
+  .prefs { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+  .prefs label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; }
+  /* 결과 */
+  .result-head { display: flex; justify-content: space-between; align-items: center; margin: 18px 0 8px; flex-wrap: wrap; gap: 6px; }
+  .result-head h2 { font-size: 1.05rem; }
+  .result-head .count { font-size: 0.8rem; color: var(--sub); }
+  .result-head select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.8rem; background: #fff; color: var(--ink); }
+  .rir-legend { font-size: 0.73rem; color: var(--sub); margin: -4px 0 10px; }
+  .prod { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .prod .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+  .prod .top h3 { font-size: 1rem; cursor: pointer; }
+  .prod .top h3:hover { color: var(--accent); text-decoration: underline; }
+  .badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.policy { background: var(--policy-bg); color: var(--policy); }
+  .badge.bank { background: var(--bank-bg); color: var(--bank); }
+  .badge.good { background: var(--good-bg); color: var(--good); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  .badge.disc { background: var(--accent-soft); color: var(--accent); }
+  .prod .tagline { font-size: 0.78rem; color: var(--sub); margin-bottom: 10px; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 14px; margin-bottom: 8px; }
+  .kv .item { background: #f9fafb; border-radius: 8px; padding: 8px 10px; }
+  .kv .item .k { font-size: 0.7rem; color: var(--sub); }
+  .kv .item .v { font-size: 0.95rem; font-weight: 700; }
+  .kv .item .v small { font-size: 0.72rem; font-weight: 400; color: var(--sub); }
+  .breakdown { font-size: 0.78rem; color: var(--sub); margin-bottom: 8px; }
+  .rirline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.8rem; margin-bottom: 8px; }
+  .shortfall { font-size: 0.8rem; color: var(--bad); font-weight: 700; margin-bottom: 6px; }
+  details.docs { font-size: 0.8rem; color: var(--sub); }
+  details.docs summary { cursor: pointer; font-weight: 600; color: var(--ink); font-size: 0.8rem; }
+  details.docs ul { margin: 6px 0 0 18px; }
+  details.docs .note { margin-top: 6px; font-size: 0.74rem; }
+  .fail { background: #fbfbfc; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; }
+  .fail h4 { font-size: 0.9rem; margin-bottom: 4px; }
+  .fail ul { margin-left: 18px; font-size: 0.78rem; color: var(--bad); }
+  .empty { text-align: center; color: var(--sub); font-size: 0.9rem; padding: 24px 0; }
+  .global-warn { background: var(--bad-bg); border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: 9px 12px; font-size: 0.8rem; margin: 10px 0; }
+  .profile-summary { font-size: 0.78rem; color: var(--sub); background: #f9fafb; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+  .profile-summary b { color: var(--ink); }
+  /* 월 주거비 비교 그래프 */
+  .chart-row { display: grid; grid-template-columns: minmax(110px, 34%) 1fr auto; gap: 8px; align-items: center; margin-bottom: 7px; font-size: 0.76rem; }
+  .chart-row .cname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chart-row .track { background: #f3f4f6; border-radius: 6px; height: 16px; position: relative; overflow: hidden; }
+  .chart-row .track .range { position: absolute; left: 0; top: 0; bottom: 0; background: #bfdbfe; border-radius: 6px; }
+  .chart-row .track .solid { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 6px; }
+  .chart-row .cval { color: var(--sub); white-space: nowrap; }
+  /* 부대비용 */
+  .sidecost table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .sidecost td { padding: 4px 0; border-bottom: 1px dashed var(--line); }
+  .sidecost td:last-child { text-align: right; font-weight: 700; }
+  .sidecost tr:last-child td { border-bottom: none; }
+  /* 기록 */
+  .hist { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .hist .meta { font-size: 0.82rem; }
+  .hist .meta .when { font-size: 0.72rem; color: var(--sub); }
+  .hist .acts { display: flex; gap: 6px; }
+  /* 모달 */
+  #modalWrap { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #modalWrap[hidden] { display: none; }
+  .modal { background: #fff; border-radius: 14px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px; position: relative; }
+  .modal .mclose { position: absolute; top: 10px; right: 12px; border: none; background: none; font-size: 1.1rem; cursor: pointer; color: var(--sub); }
+  .modal h3 { font-size: 1.1rem; margin-bottom: 2px; padding-right: 24px; }
+  .modal h4 { font-size: 0.85rem; margin: 14px 0 4px; color: var(--accent); }
+  .modal ul { margin-left: 18px; font-size: 0.83rem; }
+  .modal p { font-size: 0.83rem; }
+  .modal table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 4px; }
+  .modal table th, .modal table td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+  .modal table th { background: #f9fafb; font-weight: 600; }
+  footer.app { margin-top: 26px; font-size: 0.72rem; color: var(--sub); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <h1>🏠 주택 대출 계산기</h1>
+    <span class="data-date" id="dataDateLabel"></span>
+    <button class="mini-btn" id="refreshBtn" onclick="refreshData()">🔄 데이터 새로고침</button>
+  </header>
+
+  <div class="banner" id="noticeBanner">
+    본 결과는 <b>참고용 추정치</b>입니다. 실제 승인 여부·금리·한도는 금융기관 심사에 따라 달라집니다.
+  </div>
+  <div class="banner stale" id="staleBanner" style="display:none">
+    ⚠️ 대출 상품 데이터 기준일이 6개월을 초과했습니다. 각 기관 고시를 확인하여 데이터를 갱신하세요.
+  </div>
+
+  <nav class="tabs">
+    <button id="tabProfile" onclick="showTab('profile')">👤 내 프로필</button>
+    <button id="tabCalc" onclick="showTab('calc')">🧮 계산</button>
+    <button id="tabHistory" onclick="showTab('history')">🕘 기록</button>
+  </nav>
+
+  <!-- ================= 프로필 탭 ================= -->
+  <section class="panel" id="panelProfile">
+    <div class="card">
+      <h2>내 프로필</h2>
+      <p class="desc">한 번 입력하면 이 기기(브라우저)에만 저장됩니다. 어떤 서버로도 전송되지 않습니다.</p>
+      <div class="grid" id="profileForm">
+        <div class="field" data-f="birth">
+          <label>생년월일 <span class="req">*</span></label>
+          <input type="date" id="p_birth">
+          <span class="hint" id="ageHint"></span>
+          <span class="err">생년월일을 입력하세요</span>
+        </div>
+        <div class="field" data-f="marital">
+          <label>혼인 상태 <span class="req">*</span></label>
+          <select id="p_marital">
+            <option value="">선택</option>
+            <option value="미혼">미혼</option>
+            <option value="기혼">기혼 (혼인 7년 초과)</option>
+            <option value="신혼">신혼 (혼인 7년 이내)</option>
+            <option value="예비신혼">예비신혼 (3개월 내 결혼 예정)</option>
+          </select>
+          <span class="hint">신혼·예비신혼은 정책대출 특례 대상</span>
+          <span class="err">혼인 상태를 선택하세요</span>
+        </div>
+        <div class="field" data-f="income1">
+          <label>본인 연소득 (세전, 만원) <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" id="p_income1" class="money" placeholder="예: 5000">
+          <span class="hint"></span>
+          <span class="err">본인 연소득을 입력하세요</span>
+        </div>
+        <div class="field" data-f="income2" id="f_income2" style="display:none">
+          <label>배우자 연소득 (세전, 만원)</label>
+          <input type="text" inputmode="numeric" id="p_income2" class="money" placeholder="없으면 0">
+          <span class="hint">정책대출은 부부합산 소득 기준</span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="netMonthly">
+          <label>세후 월 실수령액 (가구 합산, 만원) <span class="req">*</span><button class="tip" data-tip="RIR(월 소득 대비 주거비 비율)의 분모로 쓰입니다. 실제 통장에 들어오는 금액 기준.">?</button></label>
+          <input type="text" inputmode="numeric" id="p_netMonthly" class="money" placeholder="예: 600">
+          <span class="hint">RIR(소득 대비 주거비 비율) 계산의 분모</span>
+          <span class="err">세후 월 실수령액을 입력하세요</span>
+        </div>
+        <div class="field" data-f="kids">
+          <label>자녀 수 <span class="req">*</span></label>
+          <input type="number" min="0" max="10" id="p_kids" value="0">
+          <span class="hint">다자녀 우대금리 자동 반영</span>
+          <span class="err">자녀 수를 입력하세요</span>
+        </div>
+        <div class="field" data-f="kidBirth" id="f_kidBirth" style="display:none">
+          <label>최연소 자녀 출생일</label>
+          <input type="date" id="p_kidBirth">
+          <span class="hint">출생 2년 이내면 신생아특례 대상</span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="housing">
+          <label>주택 보유 <span class="req">*</span></label>
+          <select id="p_housing">
+            <option value="">선택</option>
+            <option value="무주택">무주택</option>
+            <option value="1주택처분">1주택 (처분 조건부)</option>
+          </select>
+          <span class="hint"></span>
+          <span class="err">주택 보유 여부를 선택하세요</span>
+        </div>
+        <div class="field" data-f="firstTime">
+          <label>생애최초 주택 구입 <span class="req">*</span><button class="tip" data-tip="세대 구성원 전원이 지금까지 한 번도 주택을 소유한 적이 없는 경우. LTV 완화와 취득세 감면 대상.">?</button></label>
+          <select id="p_firstTime">
+            <option value="">선택</option>
+            <option value="Y">예 (한 번도 주택을 소유한 적 없음)</option>
+            <option value="N">아니오</option>
+          </select>
+          <span class="hint">LTV 완화·생애최초 특례 판별</span>
+          <span class="err">생애최초 여부를 선택하세요</span>
+        </div>
+        <div class="field" data-f="householder">
+          <label>세대주 여부 <span class="req">*</span><button class="tip" data-tip="주민등록상 세대의 대표. 정책대출은 대부분 세대주 요건이 있으며, 대출실행일까지 세대주가 될 예정(예비세대주)이면 가능.">?</button></label>
+          <select id="p_householder">
+            <option value="">선택</option>
+            <option value="Y">세대주</option>
+            <option value="N">세대원 (예비세대주 포함)</option>
+          </select>
+          <span class="hint">정책대출은 대부분 세대주 요건 (대출실행일까지 예비세대주 가능)</span>
+          <span class="err">세대주 여부를 선택하세요</span>
+        </div>
+        <div class="field" data-f="asset">
+          <label>순자산 (가구 합산, 만원) <span class="req">*</span><button class="tip" data-tip="총자산 − 총부채. 부동산·자동차·예금·주식 등을 합산. 정책대출은 자산 상한을 초과하면 이용 불가.">?</button></label>
+          <input type="text" inputmode="numeric" id="p_asset" class="money" placeholder="예: 20000">
+          <span class="hint">자산 − 부채. 정책대출 자산 상한 판별</span>
+          <span class="err">순자산을 입력하세요</span>
+        </div>
+        <div class="field" data-f="sme">
+          <label>중소기업 재직 <span class="req">*</span></label>
+          <select id="p_sme">
+            <option value="">선택</option>
+            <option value="Y">예</option>
+            <option value="N">아니오</option>
+          </select>
+          <span class="hint">중소기업취업청년 전세대출 판별</span>
+          <span class="err">중소기업 재직 여부를 선택하세요</span>
+        </div>
+        <div class="field" data-f="existingDebt">
+          <label>기존 대출 월 상환액 합계 (만원) <span class="req">*</span><button class="tip" data-tip="현재 갚고 있는 모든 대출의 월 상환액 합계. DSR(총부채원리금상환비율) 계산에서 신규 대출 한도를 줄입니다.">?</button></label>
+          <input type="text" inputmode="numeric" id="p_existingDebt" class="money" placeholder="없으면 0">
+          <span class="hint">DSR(총부채원리금상환비율) 계산에 사용</span>
+          <span class="err">기존 대출 월 상환액을 입력하세요 (없으면 0)</span>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn" onclick="saveProfile()">프로필 저장</button>
+        <div class="btn-row">
+          <button class="btn ghost" onclick="exportProfile()">📤 프로필 내보내기</button>
+          <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 프로필 가져오기</button>
+          <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importProfile(this.files[0])">
+        </div>
+        <p class="save-note" id="saveNote">✅ 저장되었습니다 (이 기기에만 저장)</p>
+        <p class="ls-warn" id="lsWarn">⚠️ 이 브라우저는 저장이 불가능합니다(시크릿 모드 등). 1회성 계산은 가능합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 계산 탭 ================= -->
+  <section class="panel" id="panelCalc">
+    <div class="profile-summary" id="profileSummary"></div>
+    <div class="card">
+      <h2>매물 정보</h2>
+      <p class="desc">알아보는 집의 정보를 입력하세요.</p>
+      <div class="grid">
+        <div class="field full" data-f="dealType">
+          <label>거래 유형 <span class="req">*</span></label>
+          <div class="seg" id="dealTypeSeg">
+            <label><input type="radio" name="dealType" value="매매"><span>매매</span></label>
+            <label><input type="radio" name="dealType" value="전세" checked><span>전세</span></label>
+            <label><input type="radio" name="dealType" value="월세"><span>월세(보증부)</span></label>
+          </div>
+        </div>
+        <div class="field" data-f="houseType">
+          <label>주택 종류 <span class="req">*</span></label>
+          <select id="l_houseType">
+            <option value="아파트">아파트</option>
+            <option value="빌라">빌라 (연립·다세대)</option>
+            <option value="오피스텔">오피스텔 (주거용)</option>
+            <option value="단독">단독·다가구</option>
+          </select>
+          <span class="hint"></span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="region">
+          <label>지역 <span class="req">*</span></label>
+          <select id="l_region">
+            <option value="서울">서울</option>
+            <option value="수도권">수도권 (경기·인천)</option>
+            <option value="광역시">광역시</option>
+            <option value="기타">그 외 지역</option>
+          </select>
+          <span class="hint"></span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="regulated" id="f_regulated" style="display:none">
+          <label>규제지역 여부 <button class="tip" data-tip="규제지역(조정대상지역 등)은 LTV 40%와 주담대 절대상한(6억 등)이 적용됩니다. 서울은 전역 규제지역(2026-07 기준).">?</button></label>
+          <select id="l_regulated">
+            <option value="N">비규제지역</option>
+            <option value="Y">규제지역 (과천·성남분당 등 경기 12곳)</option>
+          </select>
+          <span class="hint">서울은 전역 규제지역으로 자동 적용 (2026-07 기준)</span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="area">
+          <label>전용면적 (㎡) <span class="req">*</span></label>
+          <input type="number" min="1" max="500" step="0.1" id="l_area" placeholder="예: 84">
+          <span class="hint">정책대출은 대부분 85㎡ 이하</span>
+          <span class="err">전용면적을 입력하세요</span>
+        </div>
+        <div class="field" data-f="price" id="f_price" style="display:none">
+          <label>매매가격 (만원) <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" id="l_price" class="money" placeholder="예: 60000">
+          <span class="hint"></span>
+          <span class="err">매매가격을 입력하세요</span>
+        </div>
+        <div class="field" data-f="equity" id="f_equity" style="display:none">
+          <label>자기자본 (가용 현금, 만원) <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" id="l_equity" class="money" placeholder="예: 20000">
+          <span class="hint">필요 대출액 = 매매가 − 자기자본</span>
+          <span class="err">자기자본을 입력하세요</span>
+        </div>
+        <div class="field" data-f="deposit" id="f_deposit">
+          <label>보증금 (만원) <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" id="l_deposit" class="money" placeholder="예: 30000">
+          <span class="hint"></span>
+          <span class="err">보증금을 입력하세요</span>
+        </div>
+        <div class="field" data-f="rent" id="f_rent" style="display:none">
+          <label>월세 (만원) <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" id="l_rent" class="money" placeholder="예: 50">
+          <span class="hint">월 주거비에 합산됩니다</span>
+          <span class="err">월세를 입력하세요</span>
+        </div>
+        <div class="field" data-f="want">
+          <label>희망 대출 금액 (만원, 선택)</label>
+          <input type="text" inputmode="numeric" id="l_want" class="money" placeholder="비우면 최대 가능액으로 계산">
+          <span class="hint"></span>
+          <span class="err"></span>
+        </div>
+        <div class="field" data-f="term">
+          <label>대출 기간 (년) <span class="req">*</span></label>
+          <input type="number" min="1" max="40" id="l_term" value="2">
+          <span class="hint">상품 허용 범위를 벗어나면 자동 보정</span>
+          <span class="err">대출 기간을 입력하세요</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>우대 조건 <button class="tip" data-tip="체크한 항목만큼 금리가 깎입니다. 은행·상품별로 우대폭이 다르므로 대표값 기준입니다. 자녀 수 우대는 프로필에서 자동 반영.">?</button></h2>
+      <p class="desc">해당하는 항목을 체크하면 우대금리가 반영됩니다.</p>
+      <div class="prefs">
+        <label><input type="checkbox" id="pref_salary"> 급여이체</label>
+        <label><input type="checkbox" id="pref_card"> 카드 실적</label>
+        <label><input type="checkbox" id="pref_subscription"> 주택청약통장 보유</label>
+        <label><input type="checkbox" id="pref_autopay"> 자동이체 등록</label>
+        <label><input type="checkbox" id="pref_econtract"> 부동산 전자계약</label>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <button class="btn" id="calcBtn" onclick="runCalc()">대출 계산하기</button>
+    </div>
+    <div id="resultArea"></div>
+  </section>
+
+  <!-- ================= 기록 탭 ================= -->
+  <section class="panel" id="panelHistory">
+    <div class="card">
+      <h2>최근 검색 기록</h2>
+      <p class="desc">최근 10건까지 이 기기에 저장됩니다. [다시 계산]을 누르면 당시 매물 조건으로 현재 프로필·데이터 기준 재계산합니다.</p>
+      <div id="historyList"></div>
+      <div class="btn-row"><button class="btn ghost" onclick="clearHistory()">기록 전체 삭제</button></div>
+    </div>
+  </section>
+
+  <footer class="app">
+    데이터: 내장 스냅샷 + 외부 loan_products.json(있으면 접속 시마다 새로 로드) · 개인정보는 이 기기의 localStorage에만 저장됩니다
+  </footer>
+</div>
+
+<!-- 상품 상세 모달 -->
+<div id="modalWrap" hidden onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     대출 상품 데이터 (금액 단위: 만원 / 금리 단위: 연 %)
+     ※ 이 블록은 update_rates.py가 loan_products.json과 동기화한다.
+        수동 갱신 시에도 py update_rates.py 를 한 번 실행해 둘을 맞출 것.
+     ============================================================ -->
+<script type="application/json" id="loan-data">
+{
+  "dataDate": "2026-07-15",
+  "baseRates": {
+    "코픽스신규": 2.55,
+    "금융채5년": 2.9
+  },
+  "baseRatesNote": "기준금리 값은 대표치이며 은행연합회(portal.kfb.or.kr) 최신 고시로 갱신 필요",
+  "regulation": {
+    "note": "2026-07 기준: 규제지역(서울 전역·경기 12곳) LTV 40%, 그 외 70%. 규제지역 주담대 절대상한: 주택가 15억 이하 6억 / 15~25억 4억 / 25억 초과 2억. 수도권 비규제 주담대 상한 6억. 스트레스 DSR 가산: 규제 3.0%p·수도권 1.5%p·지방 0.75%p(고시 확인 요망), 혼합형은 60% 적용(간이).",
+    "ltvRegulated": 0.4,
+    "ltvNormal": 0.7,
+    "regulatedCapTiers": [
+      {
+        "priceMax": 150000,
+        "cap": 60000
+      },
+      {
+        "priceMax": 250000,
+        "cap": 40000
+      },
+      {
+        "priceMax": null,
+        "cap": 20000
+      }
+    ],
+    "metroCap": 60000,
+    "stressRegulated": 3.0,
+    "stressMetro": 1.5,
+    "stressOther": 0.75,
+    "stressMixedFactor": 0.6
+  },
+  "discountSets": {
+    "policy": [
+      {
+        "key": "kids1",
+        "label": "자녀 1명 우대",
+        "discount": 0.3,
+        "auto": true
+      },
+      {
+        "key": "kids2",
+        "label": "자녀 2명 우대",
+        "discount": 0.5,
+        "auto": true
+      },
+      {
+        "key": "kids3",
+        "label": "다자녀(3명+) 우대",
+        "discount": 0.7,
+        "auto": true
+      },
+      {
+        "key": "econtract",
+        "label": "부동산 전자계약",
+        "discount": 0.1
+      }
+    ],
+    "bank": [
+      {
+        "key": "salary",
+        "label": "급여이체",
+        "discount": 0.3
+      },
+      {
+        "key": "card",
+        "label": "카드 실적",
+        "discount": 0.3
+      },
+      {
+        "key": "subscription",
+        "label": "주택청약통장",
+        "discount": 0.2
+      },
+      {
+        "key": "autopay",
+        "label": "자동이체",
+        "discount": 0.1
+      }
+    ]
+  },
+  "productMeta": {
+    "butimok-general": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "butimok-newlywed": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "butimok-youth": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "newborn-jeonse": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "sme-youth": {
+      "discounts": null,
+      "rateFloor": 1.0
+    },
+    "bank-jeonse": {
+      "discounts": "bank",
+      "rateFloor": null
+    },
+    "didimdol-general": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "didimdol-first": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "didimdol-newlywed": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "newborn-purchase": {
+      "discounts": "policy",
+      "rateFloor": 1.2
+    },
+    "bogeumjari": {
+      "discounts": "policy",
+      "rateFloor": 3.0
+    },
+    "bank-mortgage-var": {
+      "discounts": "bank",
+      "rateFloor": null
+    },
+    "bank-mortgage-mixed": {
+      "discounts": "bank",
+      "rateFloor": null
+    }
+  },
+  "products": [
+    {
+      "id": "butimok-general",
+      "name": "버팀목 전세자금대출 (일반)",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "무주택 서민 대표 정책 전세대출 · 저금리",
+      "eligibility": {
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMaxByRegion": {
+          "수도권": 30000,
+          "기타": 20000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 12000,
+          "기타": 8000
+        },
+        "depositRatio": 0.7
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.5
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.9
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "계약금 5% 이상 납입 영수증",
+        "주민등록등본",
+        "소득증빙(원천징수영수증 등)",
+        "재직증명서"
+      ],
+      "notes": "금리는 소득구간·보증금 구간별 차등(2.5~3.5%). 정확한 값은 주택도시기금 고시 확인. 우대금리(다자녀 등) 별도."
+    },
+    {
+      "id": "butimok-newlywed",
+      "name": "신혼부부 전용 버팀목 전세대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "신혼부부 전용 · 일반 버팀목보다 한도↑ 금리↓",
+      "eligibility": {
+        "incomeMaxCombined": 7500,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "newlywedOnly": true,
+        "priceMaxByRegion": {
+          "수도권": 40000,
+          "기타": 30000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 25000,
+          "기타": 16000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 3000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 2.7
+          },
+          {
+            "incomeMax": 6500,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 7500,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "혼인관계증명서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 금리 소득구간별 차등, 고시 확인 요망."
+    },
+    {
+      "id": "butimok-youth",
+      "name": "청년전용 버팀목 전세자금대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "만 34세 이하 청년 · 최대 2억 · 저금리",
+      "eligibility": {
+        "ageMax": 34,
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMaxByRegion": {
+          "수도권": 30000,
+          "기타": 30000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 20000,
+          "기타": 20000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.0
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 3.1
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "주민등록등본",
+        "소득증빙",
+        "재직증명서"
+      ],
+      "notes": "만 19~34세(병역이행 시 최대 39세). 금리 소득구간별 차등, 고시 확인 요망."
+    },
+    {
+      "id": "newborn-jeonse",
+      "name": "신생아특례 버팀목 전세대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "출산 2년 내 가구 · 최저 1%대 특례금리",
+      "eligibility": {
+        "incomeMaxCombined": 13000,
+        "incomeMaxDual": 20000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "newbornRequired": true,
+        "priceMaxByRegion": {
+          "수도권": 50000,
+          "기타": 40000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 24000,
+          "기타": 16000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 1.1
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 1.4
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 1.7
+          },
+          {
+            "incomeMax": 7500,
+            "rate": 2.0
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 2.3
+          },
+          {
+            "incomeMax": 10000,
+            "rate": 2.6
+          },
+          {
+            "incomeMax": 13000,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 20000,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 12
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "가족관계증명서(자녀 출생 확인)",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "2023.1.1 이후 출생 자녀, 출생 2년 이내 신청. 부부합산 1.3억(맞벌이 2억) 이하. 특례금리 적용기간 제한 있음. 추가 출산 시 우대. 고시 확인 요망."
+    },
+    {
+      "id": "sme-youth",
+      "name": "중소기업취업청년 전월세보증금대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "중기 재직 청년 · 연 1.5% 초저금리",
+      "eligibility": {
+        "ageMax": 34,
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "smeEmployeeOnly": true,
+        "priceMaxByRegion": {
+          "수도권": 20000,
+          "기타": 20000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 10000,
+          "기타": 10000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "fixed",
+        "rateMin": 1.5,
+        "rateMax": 1.5
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "재직증명서·사업자등록증(회사)",
+        "주민등록등본",
+        "소득증빙"
+      ],
+      "notes": "외벌이 3,500만원·부부합산 5,000만원 이하. 상품 일몰(종료) 여부를 주택도시기금에서 반드시 확인할 것."
+    },
+    {
+      "id": "bank-jeonse",
+      "name": "시중은행 전세자금대출 (보증서담보)",
+      "category": "전세",
+      "type": "시중은행",
+      "tagline": "HF·HUG 보증 일반 전세대출 · 자격 문턱 낮음",
+      "eligibility": {},
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 40000,
+          "기타": 40000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "코픽스신규",
+        "spreadMin": 0.8,
+        "spreadMax": 1.8
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 1,
+        "max": 2
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "계약금 영수증",
+        "주민등록등본",
+        "소득증빙",
+        "재직증명서"
+      ],
+      "notes": "은행·보증기관(HF/HUG/SGI)별 한도·금리 상이. 대표 구간이며 실제 금리는 금감원 금융상품통합비교공시(finlife) 확인. 갱신형 2년 단위."
+    },
+    {
+      "id": "didimdol-general",
+      "name": "디딤돌대출 (일반)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "무주택 서민 대표 정책 주택구입대출",
+      "eligibility": {
+        "incomeMaxCombined": 6000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 50000
+      },
+      "limit": {
+        "maxAmount": 20000,
+        "ltv": 0.7,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류",
+        "등기사항전부증명서"
+      ],
+      "notes": "주택가 5억 이하·전용 85㎡ 이하. 금리 소득·기간구간별 차등(2.85~4.15%), 고시 확인 요망. 30년 만기 기준."
+    },
+    {
+      "id": "didimdol-first",
+      "name": "디딤돌대출 (생애최초)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "생애최초 구입자 · 소득요건 완화 + LTV 80%",
+      "eligibility": {
+        "incomeMaxCombined": 7000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 50000,
+        "firstTimeBuyerOnly": true
+      },
+      "limit": {
+        "maxAmount": 24000,
+        "ltv": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          },
+          {
+            "incomeMax": 7000,
+            "rate": 3.8
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류",
+        "무주택 이력 확인 서류"
+      ],
+      "notes": "생애최초(세대 전원 주택 소유 이력 없음). LTV 80%는 규제지역에서는 규제 LTV(40%)가 우선 적용됨."
+    },
+    {
+      "id": "didimdol-newlywed",
+      "name": "디딤돌대출 (신혼)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "신혼부부 · 소득 8,500만원까지 · 한도 3.2억",
+      "eligibility": {
+        "incomeMaxCombined": 8500,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 60000,
+        "newlywedOnly": true
+      },
+      "limit": {
+        "maxAmount": 32000,
+        "ltv": 0.7,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          },
+          {
+            "incomeMax": 7000,
+            "rate": 3.8
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 4.15
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "혼인관계증명서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 주택가 6억 이하."
+    },
+    {
+      "id": "newborn-purchase",
+      "name": "신생아특례 디딤돌대출 (구입)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "출산 2년 내 가구 · 최대 4억 · 특례금리",
+      "eligibility": {
+        "incomeMaxCombined": 13000,
+        "incomeMaxDual": 20000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 90000,
+        "newbornRequired": true
+      },
+      "limit": {
+        "maxAmount": 40000,
+        "ltv": 0.7,
+        "ltvFirstTime": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 1.8
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.1
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 2.7
+          },
+          {
+            "incomeMax": 10000,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 13000,
+            "rate": 3.3
+          },
+          {
+            "incomeMax": 20000,
+            "rate": 4.5
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "가족관계증명서(자녀 출생 확인)",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "2023.1.1 이후 출생, 출생 2년 이내. 부부합산 1.3억(맞벌이 2억). 특례금리 기본 5년(추가 출산 시 연장). 주택가 9억 이하. 1주택 대환도 가능(본 계산기는 무주택 기준). 고시 확인 요망."
+    },
+    {
+      "id": "bogeumjari",
+      "name": "보금자리론",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "주금공 장기 고정금리 · DSR 미적용",
+      "eligibility": {
+        "incomeMaxCombined": 7000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "priceMax": 60000
+      },
+      "limit": {
+        "maxAmount": 36000,
+        "maxAmountFirstTime": 42000,
+        "ltv": 0.7,
+        "ltvFirstTime": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "fixed",
+        "rateMin": 4.7,
+        "rateMax": 5.0
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등",
+        "체증식"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "소득요건: 신혼 8,500만·다자녀 최대 1억까지 완화(본 계산기는 기본 7,000만 기준). 전 기간 고정금리. 주금공(hf.go.kr) 고시 확인 요망."
+    },
+    {
+      "id": "bank-mortgage-var",
+      "name": "시중은행 주택담보대출 (변동금리)",
+      "category": "구입",
+      "type": "시중은행",
+      "tagline": "코픽스 연동 변동금리 · 6개월 주기 변동",
+      "eligibility": {},
+      "limit": {
+        "maxAmount": 100000,
+        "ltv": 0.7,
+        "dsr": 0.4
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "코픽스신규",
+        "spreadMin": 1.3,
+        "spreadMax": 2.6
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이)."
+    },
+    {
+      "id": "bank-mortgage-mixed",
+      "name": "시중은행 주택담보대출 (혼합형 5년 고정)",
+      "category": "구입",
+      "type": "시중은행",
+      "tagline": "5년 고정 후 변동 · 금리 예측 가능성↑",
+      "eligibility": {},
+      "limit": {
+        "maxAmount": 100000,
+        "ltv": 0.7,
+        "dsr": 0.4
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "금융채5년",
+        "spreadMin": 0.8,
+        "spreadMax": 1.7
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이)."
+    }
+  ]
+}
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   주택 대출 계산기 — 전부 클라이언트 계산 (만원 단위 정수)
+   데이터: 내장 스냅샷으로 시작, loan_products.json이 있으면
+   접속 시마다 캐시 없이 새로 로드해 교체 (file://에서는 내장 사용)
+   ============================================================ */
+let LOAN_DATA = JSON.parse(document.getElementById("loan-data").textContent);
+let dataSource = "내장 스냅샷";
+const LS_KEY = "loanCalc.profile.v1";
+const HIST_KEY = "loanCalc.history.v1";
+
+/* ---------- 외부 데이터 로드 (사용할 때마다 최신) ---------- */
+async function tryExternalData() {
+  try {
+    // no-store + 타임스탬프 쿼리: 브라우저·중간 캐시를 모두 우회해 항상 새로 받는다
+    const res = await fetch("loan_products.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    if (j && j.dataDate && Array.isArray(j.products)) {
+      LOAN_DATA = j;
+      dataSource = "외부 데이터";
+      return true;
+    }
+  } catch (e) { /* file:// 직접 열기 등 — 내장 스냅샷 유지 */ }
+  return false;
+}
+function renderDataDate() {
+  const d = LOAN_DATA.dataDate;
+  document.getElementById("dataDateLabel").textContent = `데이터 기준일 ${d} · ${dataSource}`;
+  const ageDays = (Date.now() - new Date(d).getTime()) / 86400000;
+  document.getElementById("staleBanner").style.display = ageDays > 183 ? "block" : "none";
+}
+async function refreshData() {
+  const ok = await tryExternalData();
+  renderDataDate();
+  const btn = document.getElementById("refreshBtn");
+  btn.textContent = ok ? "✅ 최신 데이터 로드됨" : "ℹ️ 외부 데이터 없음(내장 사용)";
+  setTimeout(() => { btn.textContent = "🔄 데이터 새로고침"; }, 2000);
+}
+
+/* ---------- 유틸: 금액 포맷 ---------- */
+function comma(n) { return Number(n).toLocaleString("ko-KR"); }
+// 만원 단위 정수 → "3억 5,000만원" 표기
+function manwonToKorean(m) {
+  m = Math.round(m);
+  if (!isFinite(m) || m <= 0) return "0원";
+  const eok = Math.floor(m / 10000), rest = m % 10000;
+  let s = "";
+  if (eok > 0) s += comma(eok) + "억";
+  if (rest > 0) s += (s ? " " : "") + comma(rest) + "만";
+  return s + "원";
+}
+// 원 단위 → "83.5만원" 표기 (월 납입액용)
+function wonToManwon(won) {
+  const m = won / 10000;
+  return (m >= 100 ? comma(Math.round(m)) : (Math.round(m * 10) / 10)) + "만원";
+}
+function parseMoney(str) {
+  const digits = String(str || "").replace(/[^\d]/g, "");
+  return digits ? parseInt(digits, 10) : NaN;
+}
+
+/* ---------- 유틸: 나이 (만 나이) ---------- */
+function fullAge(birthStr, today) {
+  const b = new Date(birthStr);
+  let age = today.getFullYear() - b.getFullYear();
+  const beforeBirthday = (today.getMonth() < b.getMonth()) ||
+    (today.getMonth() === b.getMonth() && today.getDate() < b.getDate());
+  if (beforeBirthday) age--;
+  return age;
+}
+
+/* ---------- 상환 공식 (P: 만원, annualRatePct: %, years: 년) → 원 단위 첫 달 납입 ---------- */
+function monthlyPayment(P_manwon, annualRatePct, years, repayType) {
+  const P = P_manwon * 10000;                       // 원 단위
+  const i = annualRatePct / 100 / 12;               // 월 이율
+  const n = Math.round(years * 12);
+  if (repayType === "만기일시") {
+    return { interest: P * i, principal: 0, total: P * i };
+  }
+  if (repayType === "원금균등") {
+    const principal = P / n;                        // 매달 동일 원금, 이자는 감소(첫 달 기준)
+    return { interest: P * i, principal, total: P * i + principal };
+  }
+  // 원리금균등(체증식은 MVP에서 원리금균등으로 근사, 상품 notes에 명시)
+  if (i === 0) { const p = P / n; return { interest: 0, principal: p, total: p }; }
+  const pow = Math.pow(1 + i, n);
+  const total = P * i * pow / (pow - 1);            // 표준 원리금균등 공식
+  const interest = P * i;                           // 첫 달 이자
+  return { interest, principal: total - interest, total };
+}
+// 원리금균등 역산: 월 납입 가능액(원) → 대출원금(만원). DSR/DTI 한도 계산용
+function principalFromPayment(monthlyBudgetWon, annualRatePct, years) {
+  const i = annualRatePct / 100 / 12;
+  const n = Math.round(years * 12);
+  if (monthlyBudgetWon <= 0) return 0;
+  if (i === 0) return (monthlyBudgetWon * n) / 10000;
+  const pow = Math.pow(1 + i, n);
+  return (monthlyBudgetWon * (pow - 1) / (i * pow)) / 10000;
+}
+
+/* ---------- 프로필 저장/불러오기 ---------- */
+function lsAvailable() {
+  try { localStorage.setItem("__t", "1"); localStorage.removeItem("__t"); return true; }
+  catch (e) { return false; }
+}
+function readProfileForm() {
+  return {
+    birth: document.getElementById("p_birth").value,
+    marital: document.getElementById("p_marital").value,
+    income1: parseMoney(document.getElementById("p_income1").value),
+    income2: parseMoney(document.getElementById("p_income2").value) || 0,
+    netMonthly: parseMoney(document.getElementById("p_netMonthly").value),
+    kids: parseInt(document.getElementById("p_kids").value, 10),
+    kidBirth: document.getElementById("p_kidBirth").value,
+    housing: document.getElementById("p_housing").value,
+    firstTime: document.getElementById("p_firstTime").value,
+    householder: document.getElementById("p_householder").value,
+    asset: parseMoney(document.getElementById("p_asset").value),
+    sme: document.getElementById("p_sme").value,
+    existingDebt: parseMoney(document.getElementById("p_existingDebt").value),
+    updatedAt: new Date().toISOString()
+  };
+}
+function validateProfile(p) {
+  const fails = [];
+  if (!p.birth) fails.push("birth");
+  if (!p.marital) fails.push("marital");
+  if (isNaN(p.income1)) fails.push("income1");
+  if (isNaN(p.netMonthly) || p.netMonthly <= 0) fails.push("netMonthly");
+  if (isNaN(p.kids) || p.kids < 0) fails.push("kids");
+  if (!p.housing) fails.push("housing");
+  if (!p.firstTime) fails.push("firstTime");
+  if (!p.householder) fails.push("householder");
+  if (isNaN(p.asset)) fails.push("asset");
+  if (!p.sme) fails.push("sme");
+  if (isNaN(p.existingDebt)) fails.push("existingDebt");
+  return fails;
+}
+function saveProfile() {
+  const p = readProfileForm();
+  const fails = validateProfile(p);
+  markInvalid("#profileForm", fails);
+  if (fails.length) return;
+  if (lsAvailable()) {
+    localStorage.setItem(LS_KEY, JSON.stringify(p));
+    const note = document.getElementById("saveNote");
+    note.style.display = "block";
+    setTimeout(() => { note.style.display = "none"; }, 2500);
+  } else {
+    document.getElementById("lsWarn").style.display = "block";
+  }
+  renderProfileSummary(p);
+  showTab("calc");
+}
+function loadProfile() {
+  if (!lsAvailable()) { document.getElementById("lsWarn").style.display = "block"; return null; }
+  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) { return null; }
+}
+function fillProfileForm(p) {
+  if (!p) return;
+  document.getElementById("p_birth").value = p.birth || "";
+  document.getElementById("p_marital").value = p.marital || "";
+  document.getElementById("p_income1").value = isNaN(p.income1) ? "" : comma(p.income1);
+  document.getElementById("p_income2").value = comma(p.income2 || 0);
+  document.getElementById("p_netMonthly").value = isNaN(p.netMonthly) ? "" : comma(p.netMonthly);
+  document.getElementById("p_kids").value = p.kids ?? 0;
+  document.getElementById("p_kidBirth").value = p.kidBirth || "";
+  document.getElementById("p_housing").value = p.housing || "";
+  document.getElementById("p_firstTime").value = p.firstTime || "";
+  document.getElementById("p_householder").value = p.householder || "";
+  document.getElementById("p_asset").value = isNaN(p.asset) ? "" : comma(p.asset);
+  document.getElementById("p_sme").value = p.sme || "";
+  document.getElementById("p_existingDebt").value = isNaN(p.existingDebt) ? "" : comma(p.existingDebt);
+  syncProfileConditionals();
+  updateMoneyHints();
+}
+
+/* ---------- 프로필 내보내기/가져오기 (기기 간 이동용) ---------- */
+function exportProfile() {
+  const p = loadProfile() || readProfileForm();
+  if (validateProfile(p).length) { alert("먼저 프로필을 완성해 주세요."); return; }
+  const blob = new Blob([JSON.stringify(p, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "loan-calc-profile.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importProfile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const p = JSON.parse(reader.result);
+      if (validateProfile(p).length) { alert("프로필 파일 형식이 올바르지 않습니다."); return; }
+      fillProfileForm(p);
+      if (lsAvailable()) localStorage.setItem(LS_KEY, JSON.stringify(p));
+      renderProfileSummary(p);
+      const note = document.getElementById("saveNote");
+      note.textContent = "✅ 프로필을 가져와 저장했습니다";
+      note.style.display = "block";
+      setTimeout(() => { note.style.display = "none"; note.textContent = "✅ 저장되었습니다 (이 기기에만 저장)"; }, 2500);
+    } catch (e) { alert("JSON 파일을 읽을 수 없습니다."); }
+  };
+  reader.readAsText(file);
+  document.getElementById("importFile").value = "";
+}
+
+/* ---------- 자격 판별 ---------- */
+function isNewlywed(p) { return p.marital === "신혼" || p.marital === "예비신혼"; }
+function isMarried(p) { return p.marital !== "미혼" && p.marital !== ""; }
+function combinedIncome(p) { return (p.income1 || 0) + (isMarried(p) ? (p.income2 || 0) : 0); }
+function isDualIncome(p) { return isMarried(p) && (p.income1 || 0) > 0 && (p.income2 || 0) > 0; }
+function hasNewborn(p, today) {
+  if (!p.kidBirth || !p.kids) return false;
+  const b = new Date(p.kidBirth);
+  if (b < new Date("2023-01-01")) return false;           // 신생아특례: 2023.1.1 이후 출생
+  const twoYearsAgo = new Date(today); twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+  return b >= twoYearsAgo;                                 // 출생 후 2년 이내
+}
+// 지역 → 정책대출 한도 구분(수도권/기타)
+function regionGroup(region) { return (region === "서울" || region === "수도권") ? "수도권" : "기타"; }
+
+function checkEligibility(prod, p, listing, today) {
+  const e = prod.eligibility || {};
+  const reasons = [];
+  const income = combinedIncome(p);
+  if (e.ageMax != null) {
+    const age = fullAge(p.birth, today);
+    if (age > e.ageMax) reasons.push(`만 ${e.ageMax}세 이하 대상 (현재 만 ${age}세)`);
+  }
+  if (e.incomeMaxCombined != null) {
+    // 맞벌이 완화 한도가 있는 상품(신생아특례)은 맞벌이일 때 상향 기준 적용
+    const cap = (e.incomeMaxDual != null && isDualIncome(p)) ? e.incomeMaxDual : e.incomeMaxCombined;
+    if (income > cap) reasons.push(`부부합산 소득 ${manwonToKorean(cap)} 이하 대상 (현재 ${manwonToKorean(income)})`);
+  }
+  if (e.assetMax != null && p.asset > e.assetMax) {
+    reasons.push(`순자산 ${manwonToKorean(e.assetMax)} 이하 대상 (현재 ${manwonToKorean(p.asset)})`);
+  }
+  if (e.homelessRequired && p.housing !== "무주택") {
+    reasons.push("무주택 세대 대상 (현재 1주택 처분조건부)");
+  }
+  if (e.householderRequired && p.householder !== "Y") {
+    reasons.push("세대주 요건 (대출실행일까지 예비세대주 가능 — 충족 시 재확인)");
+  }
+  if (e.areaMaxM2 != null && listing.area > e.areaMaxM2) {
+    reasons.push(`전용면적 ${e.areaMaxM2}㎡ 이하 대상 (현재 ${listing.area}㎡)`);
+  }
+  if (e.newlywedOnly && !isNewlywed(p)) reasons.push("신혼부부(혼인 7년 이내·예비 포함) 전용");
+  if (e.newbornRequired && !hasNewborn(p, today)) reasons.push("2023.1.1 이후 출생·출생 2년 이내 자녀 필요");
+  if (e.smeEmployeeOnly && p.sme !== "Y") reasons.push("중소기업 재직자 전용");
+  if (e.firstTimeBuyerOnly && p.firstTime !== "Y") reasons.push("생애최초 구입자 전용");
+  // 대상 주택 가격 상한 (전세: 보증금 / 매매: 매매가)
+  const dealPrice = listing.dealType === "매매" ? listing.price : listing.deposit;
+  if (e.priceMaxByRegion) {
+    const cap = e.priceMaxByRegion[regionGroup(listing.region)];
+    if (dealPrice > cap) reasons.push(`대상 보증금 ${manwonToKorean(cap)} 이하 (현재 ${manwonToKorean(dealPrice)})`);
+  }
+  if (e.priceMax != null && dealPrice > e.priceMax) {
+    reasons.push(`대상 주택가격 ${manwonToKorean(e.priceMax)} 이하 (현재 ${manwonToKorean(dealPrice)})`);
+  }
+  return reasons;
+}
+
+/* ---------- 금리 결정 → {min, max} (%) ---------- */
+function resolveRate(prod, p) {
+  const r = prod.rate;
+  if (r.kind === "fixed") return { min: r.rateMin, max: r.rateMax };
+  if (r.kind === "baseSpread") {
+    const base = LOAN_DATA.baseRates[r.base] ?? 0;
+    return { min: round2(base + r.spreadMin), max: round2(base + r.spreadMax) };
+  }
+  // incomeTable: 부부합산 소득이 속하는 구간의 고시 금리 (단일값)
+  const income = combinedIncome(p);
+  for (const row of r.table) {
+    if (income <= row.incomeMax) return { min: row.rate, max: row.rate };
+  }
+  const last = r.table[r.table.length - 1];
+  return { min: last.rate, max: last.rate };
+}
+function round2(x) { return Math.round(x * 100) / 100; }
+
+/* ---------- 우대금리: 상품별 우대 목록 × (프로필 자동 + 체크박스) ---------- */
+function readPrefs() {
+  return {
+    salary: document.getElementById("pref_salary").checked,
+    card: document.getElementById("pref_card").checked,
+    subscription: document.getElementById("pref_subscription").checked,
+    autopay: document.getElementById("pref_autopay").checked,
+    econtract: document.getElementById("pref_econtract").checked
+  };
+}
+function computeDiscounts(prod, p, prefs) {
+  const meta = (LOAN_DATA.productMeta || {})[prod.id] || {};
+  const set = (LOAN_DATA.discountSets || {})[meta.discounts] || [];
+  let sum = 0;
+  const labels = [];
+  let bestKid = null;
+  for (const d of set) {
+    if (/^kids(\d)$/.test(d.key)) {
+      // 다자녀 우대는 해당하는 것 중 가장 큰 1개만 적용
+      const need = parseInt(d.key.slice(4), 10);
+      if ((p.kids || 0) >= need && (!bestKid || d.discount > bestKid.discount)) bestKid = d;
+    } else if (prefs[d.key]) {
+      sum += d.discount; labels.push(d.label);
+    }
+  }
+  if (bestKid) { sum += bestKid.discount; labels.push(bestKid.label); }
+  return { sum: round2(sum), labels, floor: meta.rateFloor ?? 0 };
+}
+function applyDiscount(rate, disc) {
+  return {
+    min: round2(Math.max(rate.min - disc.sum, disc.floor)),
+    max: round2(Math.max(rate.max - disc.sum, disc.floor))
+  };
+}
+
+/* ---------- 한도 계산: 여러 상한의 최솟값 (만원) ---------- */
+// 스트레스 DSR 가산금리(간이): 변동성 있는 상품(baseSpread)의 DSR 한도 계산에만 가산
+function stressAdd(prod, listing) {
+  if (prod.rate.kind !== "baseSpread" || !prod.limit.dsr) return 0;
+  const reg = LOAN_DATA.regulation;
+  let s = listing.regulated ? reg.stressRegulated
+        : (regionGroup(listing.region) === "수도권" ? reg.stressMetro : reg.stressOther);
+  if (prod.rate.base === "금융채5년") s *= reg.stressMixedFactor;  // 혼합형 완화 (간이)
+  return round2(s);
+}
+function computeLimit(prod, p, listing, rateMax, termYears) {
+  const L = prod.limit;
+  const reg = LOAN_DATA.regulation;
+  const candidates = [];  // {value, label}
+  // ① 상품 자체 최대한도
+  let productMax;
+  if (L.maxAmountByRegion) productMax = L.maxAmountByRegion[regionGroup(listing.region)];
+  else productMax = (p.firstTime === "Y" && L.maxAmountFirstTime) ? L.maxAmountFirstTime : L.maxAmount;
+  candidates.push({ value: productMax, label: "상품 최대한도" });
+
+  if (prod.category === "전세") {
+    // ② 보증금 × 보증비율
+    candidates.push({ value: Math.floor(listing.deposit * L.depositRatio), label: `보증금의 ${Math.round(L.depositRatio * 100)}%` });
+    // 전세대출은 DSR 미적용 (보증부)
+  } else {
+    // ② 매매가 × 유효 LTV — 유효 LTV = min(상품 LTV, 지역 규제 LTV)
+    const productLtv = (p.firstTime === "Y" && L.ltvFirstTime) ? L.ltvFirstTime : L.ltv;
+    const regLtv = listing.regulated ? reg.ltvRegulated : reg.ltvNormal;
+    const effLtv = Math.min(productLtv, regLtv);
+    candidates.push({ value: Math.floor(listing.price * effLtv), label: `LTV ${Math.round(effLtv * 100)}%${listing.regulated ? " (규제지역)" : ""}` });
+    // ③ 규제지역 절대상한 (가격구간별) / 수도권 비규제 상한
+    if (listing.regulated) {
+      for (const tier of reg.regulatedCapTiers) {
+        if (tier.priceMax === null || listing.price <= tier.priceMax) {
+          candidates.push({ value: tier.cap, label: "규제지역 주담대 상한" });
+          break;
+        }
+      }
+    } else if (regionGroup(listing.region) === "수도권") {
+      candidates.push({ value: reg.metroCap, label: "수도권 주담대 상한" });
+    }
+    // ④ 상환능력 상한: 은행 DSR 40%(+스트레스 가산) / 정책 DTI 60% (간이 — 원리금균등·최고금리 기준 보수적 역산)
+    const annualIncomeWon = combinedIncome(p) * 10000;
+    const existingMonthlyWon = (p.existingDebt || 0) * 10000;
+    if (L.dsr) {
+      const stress = stressAdd(prod, listing);
+      const budget = (annualIncomeWon * L.dsr / 12) - existingMonthlyWon;
+      candidates.push({
+        value: Math.floor(principalFromPayment(budget, rateMax + stress, termYears)),
+        label: `DSR ${Math.round(L.dsr * 100)}%${stress ? ` (스트레스 +${stress}%p)` : ""}`
+      });
+    } else if (L.dti) {
+      const budget = (annualIncomeWon * L.dti / 12) - existingMonthlyWon;
+      candidates.push({ value: Math.floor(principalFromPayment(budget, rateMax, termYears)), label: `DTI ${Math.round(L.dti * 100)}%` });
+    }
+  }
+  let best = candidates[0];
+  for (const c of candidates) if (c.value < best.value) best = c;
+  return { limit: Math.max(0, best.value), bindingLabel: best.label };
+}
+
+/* ---------- 상품 1건 평가 ---------- */
+function evaluateProduct(prod, p, listing, today, prefs) {
+  const reasons = checkEligibility(prod, p, listing, today);
+  if (reasons.length) return { prod, eligible: false, reasons };
+
+  const baseRate = resolveRate(prod, p);
+  const disc = computeDiscounts(prod, p, prefs);
+  const rate = applyDiscount(baseRate, disc);   // 우대 반영 금리 — 이후 모든 계산에 사용
+  // 대출 기간: 입력값을 상품 허용 범위로 보정
+  let term = listing.term;
+  let termClamped = false;
+  if (term < prod.termYears.min) { term = prod.termYears.min; termClamped = true; }
+  if (term > prod.termYears.max) { term = prod.termYears.max; termClamped = true; }
+
+  const { limit, bindingLabel } = computeLimit(prod, p, listing, rate.max, term);
+  if (limit <= 0) return { prod, eligible: false, reasons: [`상환능력 기준(${bindingLabel})으로 대출 가능액이 없습니다`] };
+
+  // 실제 대출액: 희망액 vs 필요액 vs 한도
+  let desired = limit;
+  if (!isNaN(listing.want) && listing.want > 0) desired = Math.min(listing.want, limit);
+  else if (listing.dealType === "매매") desired = Math.min(Math.max(0, listing.price - listing.equity), limit);
+
+  // 매매 자금 부족 판정: 자기자본 + 한도 < 매매가
+  const shortfall = (listing.dealType === "매매") ? Math.max(0, listing.price - listing.equity - limit) : 0;
+
+  // 월 납입액: 상품 기본 상환방식, 금리 최저·최고 각각 계산
+  const repayType = prod.repaymentTypes[0];
+  const payMin = monthlyPayment(desired, rate.min, term, repayType);
+  const payMax = monthlyPayment(desired, rate.max, term, repayType);
+  const rentWon = (listing.dealType === "월세" ? listing.rent : 0) * 10000;
+
+  // 월 주거비 총액 = 월세 + 이자 + 원금상환분
+  const costMin = rentWon + payMin.total;
+  const costMax = rentWon + payMax.total;
+
+  // RIR: 이자만 기준 / 원리금 기준 (분모: 세후 월 실수령액)
+  const netWon = p.netMonthly * 10000;
+  const rir = {
+    interestOnlyMin: (rentWon + payMin.interest) / netWon * 100,
+    interestOnlyMax: (rentWon + payMax.interest) / netWon * 100,
+    fullMin: costMin / netWon * 100,
+    fullMax: costMax / netWon * 100
+  };
+  return {
+    prod, eligible: true, baseRate, disc, rate, term, termClamped, limit, bindingLabel,
+    desired, shortfall, repayType, payMin, payMax, rentWon, costMin, costMax, rir
+  };
+}
+
+/* ---------- 입력 검증 표시 ---------- */
+function markInvalid(scopeSel, failKeys) {
+  document.querySelectorAll(scopeSel + " .field").forEach(f => {
+    f.classList.toggle("invalid", failKeys.includes(f.dataset.f));
+  });
+}
+
+/* ---------- 계산 실행 ---------- */
+function readListingForm() {
+  const dealType = document.querySelector('input[name="dealType"]:checked').value;
+  const region = document.getElementById("l_region").value;
+  return {
+    dealType,
+    houseType: document.getElementById("l_houseType").value,
+    region,
+    // 서울은 전역 규제지역(2026-07 기준). 경기·인천은 사용자 선택
+    regulated: region === "서울" || (region === "수도권" && document.getElementById("l_regulated").value === "Y"),
+    area: parseFloat(document.getElementById("l_area").value),
+    price: parseMoney(document.getElementById("l_price").value),
+    equity: parseMoney(document.getElementById("l_equity").value),
+    deposit: parseMoney(document.getElementById("l_deposit").value),
+    rent: parseMoney(document.getElementById("l_rent").value),
+    want: parseMoney(document.getElementById("l_want").value),
+    term: parseFloat(document.getElementById("l_term").value)
+  };
+}
+function fillListingForm(l) {
+  document.querySelector(`input[name="dealType"][value="${l.dealType}"]`).checked = true;
+  syncDealTypeFields();
+  document.getElementById("l_houseType").value = l.houseType;
+  document.getElementById("l_region").value = l.region;
+  syncRegionFields();
+  if (l.region === "수도권") document.getElementById("l_regulated").value = (l.regulated ? "Y" : "N");
+  document.getElementById("l_area").value = l.area;
+  document.getElementById("l_price").value = isNaN(l.price) ? "" : comma(l.price);
+  document.getElementById("l_equity").value = isNaN(l.equity) ? "" : comma(l.equity);
+  document.getElementById("l_deposit").value = isNaN(l.deposit) ? "" : comma(l.deposit);
+  document.getElementById("l_rent").value = isNaN(l.rent) ? "" : comma(l.rent);
+  document.getElementById("l_want").value = isNaN(l.want) ? "" : comma(l.want);
+  document.getElementById("l_term").value = l.term;
+  updateMoneyHints();
+}
+function validateListing(l) {
+  const fails = [];
+  if (isNaN(l.area) || l.area <= 0) fails.push("area");
+  if (l.dealType === "매매") {
+    if (isNaN(l.price) || l.price <= 0) fails.push("price");
+    if (isNaN(l.equity)) fails.push("equity");
+  } else {
+    if (isNaN(l.deposit) || l.deposit <= 0) fails.push("deposit");
+    if (l.dealType === "월세" && (isNaN(l.rent) || l.rent <= 0)) fails.push("rent");
+  }
+  if (isNaN(l.term) || l.term <= 0) fails.push("term");
+  return fails;
+}
+
+let lastCalc = null;      // 정렬 변경 시 재렌더용
+let sortKey = "cost";     // cost | limit | rir
+
+function runCalc() {
+  // 프로필: 폼에 유효하게 입력돼 있으면 폼 값, 아니면 저장본 사용
+  const formProfile = readProfileForm();
+  let profile = null;
+  if (!validateProfile(formProfile).length) {
+    profile = formProfile;
+  } else {
+    const saved = loadProfile();
+    if (!saved || validateProfile(saved).length) {
+      alert("먼저 [내 프로필] 탭에서 프로필을 입력·저장하세요.");
+      showTab("profile");
+      return;
+    }
+    profile = saved;
+    fillProfileForm(saved);           // 폼과 저장본 동기화
+  }
+  renderProfileSummary(profile);      // 계산에 사용된 프로필을 상단 요약에 반영
+  const listing = readListingForm();
+  const fails = validateListing(listing);
+  // 논리 검증: 희망액이 보증금/매매가 초과
+  const globalWarns = [];
+  if (!isNaN(listing.want) && listing.want > 0) {
+    if (listing.dealType !== "매매" && listing.want > listing.deposit)
+      globalWarns.push(`희망 대출 금액(${manwonToKorean(listing.want)})이 보증금(${manwonToKorean(listing.deposit)})을 초과합니다.`);
+    if (listing.dealType === "매매" && listing.want > listing.price)
+      globalWarns.push(`희망 대출 금액(${manwonToKorean(listing.want)})이 매매가격(${manwonToKorean(listing.price)})을 초과합니다.`);
+  }
+  markInvalid("#panelCalc", fails);
+  if (fails.length) return;
+
+  const prefs = readPrefs();
+  const today = new Date();
+  const wantCat = listing.dealType === "매매" ? "구입" : "전세";
+  const results = LOAN_DATA.products
+    .filter(prod => prod.category === wantCat)
+    .map(prod => evaluateProduct(prod, profile, listing, today, prefs));
+  const ok = results.filter(r => r.eligible);
+  const fail = results.filter(r => !r.eligible);
+  lastCalc = { ok, fail, listing, profile, globalWarns };
+  pushHistory(listing, ok);
+  renderResults();
+}
+
+/* ---------- 정렬 ---------- */
+function sortedOk() {
+  const arr = [...lastCalc.ok];
+  if (sortKey === "limit") arr.sort((a, b) => b.limit - a.limit);
+  else if (sortKey === "rir") arr.sort((a, b) => a.rir.fullMax - b.rir.fullMax);
+  else arr.sort((a, b) => a.costMin - b.costMin);
+  return arr;
+}
+function changeSort(v) { sortKey = v; if (lastCalc) renderResults(); }
+
+/* ---------- 매매 부대비용 (참고): 취득세 + 지방교육세 + 농특세 + 중개보수 ---------- */
+function acquisitionCost(priceMan, areaM2, firstTime) {
+  const eok = priceMan / 10000;
+  // 1주택 유상취득 세율: 6억 이하 1% / 6~9억 구간 (매매가(억)×2/3−3)% / 9억 초과 3%
+  let ratePct;
+  if (eok <= 6) ratePct = 1.0;
+  else if (eok <= 9) ratePct = round2(eok * 2 / 3 - 3);
+  else ratePct = 3.0;
+  const acq = priceMan * ratePct / 100;
+  const edu = acq * 0.1;                                   // 지방교육세 (취득세의 1/10 상당 — 간이)
+  const rural = areaM2 > 85 ? priceMan * 0.002 : 0;        // 농어촌특별세 0.2% (85㎡ 초과)
+  // 생애최초 취득세 감면: 12억 이하 최대 200만원 (요건 별도 확인)
+  const discount = (firstTime === "Y" && eok <= 12) ? Math.min(acq, 200) : 0;
+  return { ratePct, acq, edu, rural, discount, total: acq + edu + rural - discount };
+}
+function brokerFee(priceMan) {
+  // 매매 중개보수 상한요율 (협의 가능, VAT 별도)
+  const tiers = [[5000, 0.6, 25], [20000, 0.5, 80], [90000, 0.4, null], [120000, 0.5, null], [150000, 0.6, null], [Infinity, 0.7, null]];
+  for (const [max, ratePct, cap] of tiers) {
+    if (priceMan <= max) {
+      let fee = priceMan * ratePct / 100;
+      if (cap != null) fee = Math.min(fee, cap);
+      return { ratePct, fee };
+    }
+  }
+}
+
+/* ---------- 결과 렌더링 ---------- */
+function rirBadge(v) {
+  // 보수적(최고금리·원리금 기준) RIR로 색상 판정: ≤25% 양호 / ≤30% 주의 / 초과 경고
+  if (v <= 25) return `<span class="badge good">양호</span>`;
+  if (v <= 30) return `<span class="badge warn">주의</span>`;
+  return `<span class="badge bad">경고</span>`;
+}
+function pct(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+function rangeText(min, max, unit, fmt) {
+  const f = fmt || (x => x);
+  return (Math.abs(min - max) < 1e-9) ? `${f(min)}${unit}` : `${f(min)}~${f(max)}${unit}`;
+}
+function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+
+function renderResults() {
+  const { fail, listing, globalWarns } = lastCalc;
+  const ok = sortedOk();
+  const area = document.getElementById("resultArea");
+  let html = "";
+  for (const w of globalWarns) html += `<div class="global-warn">⚠️ ${esc(w)}</div>`;
+
+  const sortLabels = { cost: "월 주거비 낮은 순", limit: "한도 높은 순", rir: "RIR 낮은 순" };
+  html += `<div class="result-head"><h2>✅ 가능 상품</h2>
+    <span class="count">${ok.length}건</span>
+    <select onchange="changeSort(this.value)" aria-label="정렬 기준">
+      ${Object.entries(sortLabels).map(([k, v]) => `<option value="${k}"${k === sortKey ? " selected" : ""}>${v}</option>`).join("")}
+    </select></div>`;
+  html += `<p class="rir-legend">RIR = 월 주거비 ÷ 세후 월 실수령액 × 100 · <span style="color:var(--good)">양호 ≤25%</span> · <span style="color:var(--warn)">주의 25~30%</span> · <span style="color:var(--bad)">경고 &gt;30%</span></p>`;
+
+  if (!ok.length) {
+    html += `<div class="empty">조건에 맞는 상품이 없습니다. 아래 미달 사유를 확인하세요.</div>`;
+  } else if (ok.length >= 2) {
+    // 월 주거비 비교 그래프 (진한 막대: 최저금리 기준, 연한 막대: 최고금리 기준)
+    const maxCost = Math.max(...ok.map(r => r.costMax));
+    html += `<div class="card"><h2>월 주거비 비교</h2><p class="desc">진한 막대 = 최저금리 기준 · 연한 막대 = 최고금리 기준</p>`;
+    for (const r of ok) {
+      html += `<div class="chart-row">
+        <span class="cname" title="${esc(r.prod.name)}">${esc(r.prod.name)}</span>
+        <span class="track"><span class="range" style="width:${(r.costMax / maxCost * 100).toFixed(1)}%"></span><span class="solid" style="width:${(r.costMin / maxCost * 100).toFixed(1)}%"></span></span>
+        <span class="cval">${rangeText(r.costMin, r.costMax, "", wonToManwon)}</span>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // 매매 부대비용 참고 카드
+  if (listing.dealType === "매매" && ok.length) {
+    const ac = acquisitionCost(listing.price, listing.area, lastCalc.profile.firstTime);
+    const bf = brokerFee(listing.price);
+    html += `<div class="card sidecost"><h2>매매 부대비용 (참고)</h2>
+      <p class="desc">대출 외에 현금으로 준비해야 하는 비용입니다. 세율·요율은 대표 기준(1주택 유상취득), 정확한 값은 위택스·중개사무소 확인.</p>
+      <table>
+        <tr><td>취득세 (세율 ${ac.ratePct}%)${ac.discount ? " − 생애최초 감면 " + manwonToKorean(ac.discount) : ""}</td><td>${manwonToKorean(ac.acq - ac.discount)}</td></tr>
+        <tr><td>지방교육세</td><td>${manwonToKorean(ac.edu)}</td></tr>
+        ${ac.rural ? `<tr><td>농어촌특별세 (85㎡ 초과)</td><td>${manwonToKorean(ac.rural)}</td></tr>` : ""}
+        <tr><td>중개보수 상한 (요율 ${bf.ratePct}%, 협의 가능·VAT 별도)</td><td>${manwonToKorean(bf.fee)}</td></tr>
+        <tr><td><b>합계 (약)</b></td><td>${manwonToKorean(ac.total + bf.fee)}</td></tr>
+      </table></div>`;
+  }
+
+  for (const r of ok) {
+    const typeBadge = r.prod.type === "정부정책" ? `<span class="badge policy">정부정책</span>` : `<span class="badge bank">시중은행</span>`;
+    const rateTxt = rangeText(r.rate.min, r.rate.max, "%", x => x.toFixed(2));
+    const costTxt = rangeText(r.costMin, r.costMax, "", wonToManwon);
+    const rirFullTxt = rangeText(r.rir.fullMin, r.rir.fullMax, "%", pct);
+    const rirIntTxt = rangeText(r.rir.interestOnlyMin, r.rir.interestOnlyMax, "%", pct);
+    const discBadge = r.disc.sum > 0 ? `<span class="badge disc">우대 −${r.disc.sum}%p</span>` : "";
+    // 내역(최저금리 기준 첫 달): 월세 / 이자 / 원금
+    const parts = [];
+    if (r.rentWon > 0) parts.push(`월세 ${wonToManwon(r.rentWon)}`);
+    parts.push(`이자 ${wonToManwon(r.payMin.interest)}${r.rate.min !== r.rate.max ? "~" + wonToManwon(r.payMax.interest) : ""}`);
+    if (r.payMin.principal > 0) parts.push(`원금 ${wonToManwon(r.payMin.principal)}`);
+    html += `
+    <div class="prod">
+      <div class="top"><h3 onclick="openModal('${r.prod.id}')" title="클릭하면 상세 정보">${esc(r.prod.name)}</h3>${typeBadge}${discBadge}</div>
+      <p class="tagline">${esc(r.prod.tagline)}</p>
+      ${r.shortfall > 0 ? `<p class="shortfall">⚠️ 자금 부족: 자기자본+한도로 ${manwonToKorean(r.shortfall)} 모자랍니다</p>` : ""}
+      <div class="kv">
+        <div class="item"><div class="k">예상 금리${r.disc.sum > 0 ? " (우대 반영)" : ""}</div><div class="v">${rateTxt}</div></div>
+        <div class="item"><div class="k">대출 가능 한도</div><div class="v">${manwonToKorean(r.limit)} <small>(${esc(r.bindingLabel)})</small></div></div>
+        <div class="item"><div class="k">계산 대출액 · 기간</div><div class="v">${manwonToKorean(r.desired)} <small>· ${r.term}년${r.termClamped ? " (보정)" : ""} · ${esc(r.repayType)}</small></div></div>
+        <div class="item"><div class="k">월 주거비 총액</div><div class="v">${costTxt}</div></div>
+      </div>
+      <p class="breakdown">첫 달 기준 내역: ${parts.join(" + ")}${r.disc.labels.length ? ` · 적용 우대: ${r.disc.labels.map(esc).join(", ")}` : ""}</p>
+      <div class="rirline">
+        <b>RIR</b>
+        <span>원리금 기준 ${rirFullTxt} ${rirBadge(r.rir.fullMax)}</span>
+        <span>이자만 기준 ${rirIntTxt} ${rirBadge(r.rir.interestOnlyMax)}</span>
+      </div>
+      <details class="docs">
+        <summary>필요 서류 · 비고</summary>
+        <ul>${r.prod.documents.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+        <p class="note">📌 ${esc(r.prod.notes)}</p>
+      </details>
+    </div>`;
+  }
+
+  if (fail.length) {
+    html += `<div class="result-head"><h2>❌ 조건 미달 상품</h2><span class="count">${fail.length}건</span></div>`;
+    for (const r of fail) {
+      html += `<div class="fail"><h4>${esc(r.prod.name)}</h4><ul>${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+    }
+  }
+  area.innerHTML = html;
+  area.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ---------- 상품 상세 모달 ---------- */
+function eligibilityText(e) {
+  const out = [];
+  if (e.ageMax != null) out.push(`만 ${e.ageMax}세 이하`);
+  if (e.incomeMaxCombined != null) out.push(`부부합산 소득 ${manwonToKorean(e.incomeMaxCombined)} 이하${e.incomeMaxDual ? ` (맞벌이 ${manwonToKorean(e.incomeMaxDual)})` : ""}`);
+  if (e.assetMax != null) out.push(`순자산 ${manwonToKorean(e.assetMax)} 이하`);
+  if (e.homelessRequired) out.push("무주택 세대");
+  if (e.householderRequired) out.push("세대주 (예비세대주 포함)");
+  if (e.areaMaxM2 != null) out.push(`전용면적 ${e.areaMaxM2}㎡ 이하`);
+  if (e.newlywedOnly) out.push("신혼부부(혼인 7년 이내·예비 포함) 전용");
+  if (e.newbornRequired) out.push("2023.1.1 이후 출생·출생 2년 이내 자녀");
+  if (e.smeEmployeeOnly) out.push("중소기업 재직자");
+  if (e.firstTimeBuyerOnly) out.push("생애최초 구입자");
+  if (e.priceMaxByRegion) out.push(`대상 보증금: 수도권 ${manwonToKorean(e.priceMaxByRegion["수도권"])} · 그 외 ${manwonToKorean(e.priceMaxByRegion["기타"])} 이하`);
+  if (e.priceMax != null) out.push(`대상 주택가격 ${manwonToKorean(e.priceMax)} 이하`);
+  return out.length ? out : ["별도 자격 제한 없음 (소득 증빙 필요)"];
+}
+function limitText(L) {
+  const out = [];
+  if (L.maxAmountByRegion) out.push(`최대: 수도권 ${manwonToKorean(L.maxAmountByRegion["수도권"])} · 그 외 ${manwonToKorean(L.maxAmountByRegion["기타"])}`);
+  if (L.maxAmount) out.push(`최대 ${manwonToKorean(L.maxAmount)}${L.maxAmountFirstTime ? ` (생애최초 ${manwonToKorean(L.maxAmountFirstTime)})` : ""}`);
+  if (L.depositRatio) out.push(`보증금의 ${Math.round(L.depositRatio * 100)}% 이내`);
+  if (L.ltv) out.push(`LTV ${Math.round(L.ltv * 100)}%${L.ltvFirstTime ? ` (생애최초 ${Math.round(L.ltvFirstTime * 100)}%)` : ""} — 규제지역은 규제 LTV 우선`);
+  if (L.dsr) out.push(`DSR ${Math.round(L.dsr * 100)}% 적용`);
+  if (L.dti) out.push(`DTI ${Math.round(L.dti * 100)}% 적용`);
+  return out;
+}
+function openModal(prodId) {
+  const prod = LOAN_DATA.products.find(x => x.id === prodId);
+  if (!prod) return;
+  const meta = (LOAN_DATA.productMeta || {})[prodId] || {};
+  const discSet = (LOAN_DATA.discountSets || {})[meta.discounts] || [];
+  let rateHtml = "";
+  if (prod.rate.kind === "incomeTable") {
+    rateHtml = `<table><tr><th>부부합산 소득</th><th>금리</th></tr>` +
+      prod.rate.table.map(r => `<tr><td>${manwonToKorean(r.incomeMax)} 이하</td><td>연 ${r.rate.toFixed(2)}%</td></tr>`).join("") + `</table>`;
+  } else if (prod.rate.kind === "baseSpread") {
+    const base = LOAN_DATA.baseRates[prod.rate.base] ?? 0;
+    rateHtml = `<p>${esc(prod.rate.base)} ${base.toFixed(2)}% + 가산 ${prod.rate.spreadMin}~${prod.rate.spreadMax}%p = 연 ${round2(base + prod.rate.spreadMin).toFixed(2)}~${round2(base + prod.rate.spreadMax).toFixed(2)}%</p>`;
+  } else {
+    rateHtml = `<p>연 ${prod.rate.rateMin.toFixed(2)}${prod.rate.rateMin !== prod.rate.rateMax ? "~" + prod.rate.rateMax.toFixed(2) : ""}% (고정)</p>`;
+  }
+  const body = `
+    <h3>${esc(prod.name)}</h3>
+    <p style="color:var(--sub)">${esc(prod.tagline)} · ${esc(prod.type)}</p>
+    <h4>자격 조건</h4><ul>${eligibilityText(prod.eligibility || {}).map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    <h4>한도</h4><ul>${limitText(prod.limit).map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    <h4>금리</h4>${rateHtml}
+    ${discSet.length ? `<h4>우대금리</h4><ul>${discSet.map(d => `<li>${esc(d.label)} −${d.discount}%p${d.auto ? " (프로필 자동 반영)" : ""}</li>`).join("")}${meta.rateFloor ? `<li>최저 금리 하한 ${meta.rateFloor}%</li>` : ""}</ul>` : ""}
+    <h4>상환방식 · 기간</h4><p>${prod.repaymentTypes.map(esc).join(" / ")} · ${prod.termYears.min}~${prod.termYears.max}년</p>
+    <h4>필요 서류</h4><ul>${prod.documents.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+    <h4>비고</h4><p>📌 ${esc(prod.notes)}</p>`;
+  document.getElementById("modalBody").innerHTML = body;
+  document.getElementById("modalWrap").hidden = false;
+}
+function closeModal() { document.getElementById("modalWrap").hidden = true; }
+
+/* ---------- 검색 기록 (최근 10건) ---------- */
+function loadHistory() {
+  if (!lsAvailable()) return [];
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; }
+}
+function pushHistory(listing, ok) {
+  if (!lsAvailable()) return;
+  let arr = loadHistory();
+  const entry = {
+    ts: new Date().toISOString(),
+    listing,
+    best: ok.length ? { name: ok[0].prod.name, costMin: ok[0].costMin, rir: ok[0].rir.fullMax } : null,
+    okCount: ok.length
+  };
+  // 직전 기록과 같은 매물 조건이면 교체(중복 방지)
+  if (arr.length && JSON.stringify(arr[0].listing) === JSON.stringify(listing)) arr.shift();
+  arr.unshift(entry);
+  arr = arr.slice(0, 10);
+  localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+}
+function historySummary(h) {
+  const l = h.listing;
+  const amount = l.dealType === "매매" ? `매매가 ${manwonToKorean(l.price)}` : `보증금 ${manwonToKorean(l.deposit)}${l.dealType === "월세" ? ` · 월세 ${comma(l.rent)}만` : ""}`;
+  return `[${l.dealType}] ${l.region} ${l.houseType} ${l.area}㎡ · ${amount}`;
+}
+function renderHistory() {
+  const arr = loadHistory();
+  const el = document.getElementById("historyList");
+  if (!arr.length) { el.innerHTML = `<div class="empty">저장된 기록이 없습니다.</div>`; return; }
+  el.innerHTML = arr.map((h, idx) => `
+    <div class="hist">
+      <div class="meta">
+        <div class="when">${new Date(h.ts).toLocaleString("ko-KR")}</div>
+        <div>${esc(historySummary(h))}</div>
+        <div style="color:var(--sub);font-size:0.75rem">${h.best ? `최적: ${esc(h.best.name)} · 월 ${wonToManwon(h.best.costMin)} · RIR ${pct(h.best.rir)}%` : "가능 상품 없음"} (${h.okCount}건)</div>
+      </div>
+      <div class="acts">
+        <button class="btn ghost" onclick="rerunHistory(${idx})">다시 계산</button>
+        <button class="mini-btn" onclick="deleteHistory(${idx})">삭제</button>
+      </div>
+    </div>`).join("");
+}
+function rerunHistory(idx) {
+  const h = loadHistory()[idx];
+  if (!h) return;
+  fillListingForm(h.listing);
+  showTab("calc");
+  runCalc();
+}
+function deleteHistory(idx) {
+  const arr = loadHistory();
+  arr.splice(idx, 1);
+  localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+  renderHistory();
+}
+function clearHistory() {
+  if (!confirm("검색 기록을 모두 삭제할까요?")) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+}
+
+/* ---------- 프로필 요약 표시 ---------- */
+function renderProfileSummary(p) {
+  const el = document.getElementById("profileSummary");
+  if (!p || validateProfile(p).length) {
+    el.innerHTML = `프로필이 없습니다 — <b>[내 프로필]</b> 탭에서 먼저 입력·저장하세요.`;
+    return;
+  }
+  const today = new Date();
+  const bits = [
+    `만 ${fullAge(p.birth, today)}세`, p.marital,
+    `부부합산 ${manwonToKorean(combinedIncome(p))}/년`,
+    `세후 월 ${manwonToKorean(p.netMonthly)}`,
+    `자녀 ${p.kids}명${hasNewborn(p, today) ? " (신생아특례 해당)" : ""}`,
+    p.housing, p.firstTime === "Y" ? "생애최초" : null,
+    p.householder === "Y" ? "세대주" : "세대원",
+    `순자산 ${manwonToKorean(p.asset)}`
+  ].filter(Boolean);
+  el.innerHTML = `👤 <b>프로필</b>: ${bits.map(esc).join(" · ")}`;
+}
+
+/* ---------- UI 동작 ---------- */
+function showTab(name) {
+  const tabs = { profile: "tabProfile", calc: "tabCalc", history: "tabHistory" };
+  const panels = { profile: "panelProfile", calc: "panelCalc", history: "panelHistory" };
+  for (const k of Object.keys(tabs)) {
+    document.getElementById(tabs[k]).classList.toggle("active", k === name);
+    document.getElementById(panels[k]).classList.toggle("active", k === name);
+  }
+  if (name === "history") renderHistory();
+}
+// 거래유형에 따라 필드 표시 전환
+function syncDealTypeFields() {
+  const t = document.querySelector('input[name="dealType"]:checked').value;
+  document.getElementById("f_price").style.display = t === "매매" ? "" : "none";
+  document.getElementById("f_equity").style.display = t === "매매" ? "" : "none";
+  document.getElementById("f_deposit").style.display = t === "매매" ? "none" : "";
+  document.getElementById("f_rent").style.display = t === "월세" ? "" : "none";
+  document.getElementById("l_term").value = t === "매매" ? 30 : 2;
+}
+// 지역에 따라 규제지역 선택 표시 (경기·인천만)
+function syncRegionFields() {
+  const r = document.getElementById("l_region").value;
+  document.getElementById("f_regulated").style.display = r === "수도권" ? "" : "none";
+}
+// 프로필 조건부 필드 (배우자 소득 / 자녀 출생일)
+function syncProfileConditionals() {
+  const marital = document.getElementById("p_marital").value;
+  document.getElementById("f_income2").style.display = (marital && marital !== "미혼") ? "" : "none";
+  const kids = parseInt(document.getElementById("p_kids").value, 10) || 0;
+  document.getElementById("f_kidBirth").style.display = kids > 0 ? "" : "none";
+}
+// 금액 입력: 콤마 자동 + 한글 환산 힌트
+function attachMoneyInputs() {
+  document.querySelectorAll("input.money").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const v = parseMoney(inp.value);
+      inp.value = isNaN(v) ? "" : comma(v);
+      const hint = inp.closest(".field").querySelector(".hint");
+      if (hint && !hint.dataset.fixed) hint.dataset.orig = hint.dataset.orig ?? hint.textContent;
+      updateMoneyHint(inp);
+    });
+  });
+}
+function updateMoneyHint(inp) {
+  const v = parseMoney(inp.value);
+  const hint = inp.closest(".field").querySelector(".hint");
+  if (!hint) return;
+  if (!isNaN(v) && v > 0) hint.textContent = "= " + manwonToKorean(v);
+  else hint.textContent = hint.dataset.orig || "";
+}
+function updateMoneyHints() { document.querySelectorAll("input.money").forEach(updateMoneyHint); }
+
+/* ---------- 초기화 ---------- */
+(async function init() {
+  attachMoneyInputs();
+  document.getElementById("p_marital").addEventListener("change", syncProfileConditionals);
+  document.getElementById("p_kids").addEventListener("input", syncProfileConditionals);
+  document.querySelectorAll('input[name="dealType"]').forEach(r => r.addEventListener("change", syncDealTypeFields));
+  document.getElementById("l_region").addEventListener("change", syncRegionFields);
+  document.getElementById("p_birth").addEventListener("change", () => {
+    const v = document.getElementById("p_birth").value;
+    document.getElementById("ageHint").textContent = v ? `만 ${fullAge(v, new Date())}세` : "";
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+  syncDealTypeFields();
+  syncRegionFields();
+  syncProfileConditionals();
+
+  // 저장된 프로필이 있으면 계산 탭으로, 없으면 프로필 탭으로
+  const saved = loadProfile();
+  if (saved && !validateProfile(saved).length) {
+    fillProfileForm(saved);
+    renderProfileSummary(saved);
+    showTab("calc");
+  } else {
+    renderProfileSummary(null);
+    showTab("profile");
+  }
+
+  // 외부 데이터는 비동기로 로드 (사용할 때마다 최신 반영)
+  renderDataDate();
+  await tryExternalData();
+  renderDataDate();
+})();
+</script>
+</body>
+</html>

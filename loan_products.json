@@ -1,0 +1,828 @@
+{
+  "dataDate": "2026-07-15",
+  "baseRates": {
+    "코픽스신규": 2.55,
+    "금융채5년": 2.9
+  },
+  "baseRatesNote": "기준금리 값은 대표치이며 은행연합회(portal.kfb.or.kr) 최신 고시로 갱신 필요",
+  "regulation": {
+    "note": "2026-07 기준: 규제지역(서울 전역·경기 12곳) LTV 40%, 그 외 70%. 규제지역 주담대 절대상한: 주택가 15억 이하 6억 / 15~25억 4억 / 25억 초과 2억. 수도권 비규제 주담대 상한 6억. 스트레스 DSR 가산: 규제 3.0%p·수도권 1.5%p·지방 0.75%p(고시 확인 요망), 혼합형은 60% 적용(간이).",
+    "ltvRegulated": 0.4,
+    "ltvNormal": 0.7,
+    "regulatedCapTiers": [
+      {
+        "priceMax": 150000,
+        "cap": 60000
+      },
+      {
+        "priceMax": 250000,
+        "cap": 40000
+      },
+      {
+        "priceMax": null,
+        "cap": 20000
+      }
+    ],
+    "metroCap": 60000,
+    "stressRegulated": 3.0,
+    "stressMetro": 1.5,
+    "stressOther": 0.75,
+    "stressMixedFactor": 0.6
+  },
+  "discountSets": {
+    "policy": [
+      {
+        "key": "kids1",
+        "label": "자녀 1명 우대",
+        "discount": 0.3,
+        "auto": true
+      },
+      {
+        "key": "kids2",
+        "label": "자녀 2명 우대",
+        "discount": 0.5,
+        "auto": true
+      },
+      {
+        "key": "kids3",
+        "label": "다자녀(3명+) 우대",
+        "discount": 0.7,
+        "auto": true
+      },
+      {
+        "key": "econtract",
+        "label": "부동산 전자계약",
+        "discount": 0.1
+      }
+    ],
+    "bank": [
+      {
+        "key": "salary",
+        "label": "급여이체",
+        "discount": 0.3
+      },
+      {
+        "key": "card",
+        "label": "카드 실적",
+        "discount": 0.3
+      },
+      {
+        "key": "subscription",
+        "label": "주택청약통장",
+        "discount": 0.2
+      },
+      {
+        "key": "autopay",
+        "label": "자동이체",
+        "discount": 0.1
+      }
+    ]
+  },
+  "productMeta": {
+    "butimok-general": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "butimok-newlywed": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "butimok-youth": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "newborn-jeonse": {
+      "discounts": "policy",
+      "rateFloor": 1.0
+    },
+    "sme-youth": {
+      "discounts": null,
+      "rateFloor": 1.0
+    },
+    "bank-jeonse": {
+      "discounts": "bank",
+      "rateFloor": null
+    },
+    "didimdol-general": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "didimdol-first": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "didimdol-newlywed": {
+      "discounts": "policy",
+      "rateFloor": 1.5
+    },
+    "newborn-purchase": {
+      "discounts": "policy",
+      "rateFloor": 1.2
+    },
+    "bogeumjari": {
+      "discounts": "policy",
+      "rateFloor": 3.0
+    },
+    "bank-mortgage-var": {
+      "discounts": "bank",
+      "rateFloor": null
+    },
+    "bank-mortgage-mixed": {
+      "discounts": "bank",
+      "rateFloor": null
+    }
+  },
+  "products": [
+    {
+      "id": "butimok-general",
+      "name": "버팀목 전세자금대출 (일반)",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "무주택 서민 대표 정책 전세대출 · 저금리",
+      "eligibility": {
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMaxByRegion": {
+          "수도권": 30000,
+          "기타": 20000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 12000,
+          "기타": 8000
+        },
+        "depositRatio": 0.7
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.5
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.9
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "계약금 5% 이상 납입 영수증",
+        "주민등록등본",
+        "소득증빙(원천징수영수증 등)",
+        "재직증명서"
+      ],
+      "notes": "금리는 소득구간·보증금 구간별 차등(2.5~3.5%). 정확한 값은 주택도시기금 고시 확인. 우대금리(다자녀 등) 별도."
+    },
+    {
+      "id": "butimok-newlywed",
+      "name": "신혼부부 전용 버팀목 전세대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "신혼부부 전용 · 일반 버팀목보다 한도↑ 금리↓",
+      "eligibility": {
+        "incomeMaxCombined": 7500,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "newlywedOnly": true,
+        "priceMaxByRegion": {
+          "수도권": 40000,
+          "기타": 30000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 25000,
+          "기타": 16000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 3000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 2.7
+          },
+          {
+            "incomeMax": 6500,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 7500,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "혼인관계증명서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 금리 소득구간별 차등, 고시 확인 요망."
+    },
+    {
+      "id": "butimok-youth",
+      "name": "청년전용 버팀목 전세자금대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "만 34세 이하 청년 · 최대 2억 · 저금리",
+      "eligibility": {
+        "ageMax": 34,
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMaxByRegion": {
+          "수도권": 30000,
+          "기타": 30000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 20000,
+          "기타": 20000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.0
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 5000,
+            "rate": 3.1
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "주민등록등본",
+        "소득증빙",
+        "재직증명서"
+      ],
+      "notes": "만 19~34세(병역이행 시 최대 39세). 금리 소득구간별 차등, 고시 확인 요망."
+    },
+    {
+      "id": "newborn-jeonse",
+      "name": "신생아특례 버팀목 전세대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "출산 2년 내 가구 · 최저 1%대 특례금리",
+      "eligibility": {
+        "incomeMaxCombined": 13000,
+        "incomeMaxDual": 20000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "newbornRequired": true,
+        "priceMaxByRegion": {
+          "수도권": 50000,
+          "기타": 40000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 24000,
+          "기타": 16000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 1.1
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 1.4
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 1.7
+          },
+          {
+            "incomeMax": 7500,
+            "rate": 2.0
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 2.3
+          },
+          {
+            "incomeMax": 10000,
+            "rate": 2.6
+          },
+          {
+            "incomeMax": 13000,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 20000,
+            "rate": 3.3
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 12
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "가족관계증명서(자녀 출생 확인)",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "2023.1.1 이후 출생 자녀, 출생 2년 이내 신청. 부부합산 1.3억(맞벌이 2억) 이하. 특례금리 적용기간 제한 있음. 추가 출산 시 우대. 고시 확인 요망."
+    },
+    {
+      "id": "sme-youth",
+      "name": "중소기업취업청년 전월세보증금대출",
+      "category": "전세",
+      "type": "정부정책",
+      "tagline": "중기 재직 청년 · 연 1.5% 초저금리",
+      "eligibility": {
+        "ageMax": 34,
+        "incomeMaxCombined": 5000,
+        "assetMax": 34500,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "smeEmployeeOnly": true,
+        "priceMaxByRegion": {
+          "수도권": 20000,
+          "기타": 20000
+        }
+      },
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 10000,
+          "기타": 10000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "fixed",
+        "rateMin": 1.5,
+        "rateMax": 1.5
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 2,
+        "max": 10
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "재직증명서·사업자등록증(회사)",
+        "주민등록등본",
+        "소득증빙"
+      ],
+      "notes": "외벌이 3,500만원·부부합산 5,000만원 이하. 상품 일몰(종료) 여부를 주택도시기금에서 반드시 확인할 것."
+    },
+    {
+      "id": "bank-jeonse",
+      "name": "시중은행 전세자금대출 (보증서담보)",
+      "category": "전세",
+      "type": "시중은행",
+      "tagline": "HF·HUG 보증 일반 전세대출 · 자격 문턱 낮음",
+      "eligibility": {},
+      "limit": {
+        "maxAmountByRegion": {
+          "수도권": 40000,
+          "기타": 40000
+        },
+        "depositRatio": 0.8
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "코픽스신규",
+        "spreadMin": 0.8,
+        "spreadMax": 1.8
+      },
+      "repaymentTypes": [
+        "만기일시"
+      ],
+      "termYears": {
+        "min": 1,
+        "max": 2
+      },
+      "documents": [
+        "확정일자부 임대차계약서",
+        "계약금 영수증",
+        "주민등록등본",
+        "소득증빙",
+        "재직증명서"
+      ],
+      "notes": "은행·보증기관(HF/HUG/SGI)별 한도·금리 상이. 대표 구간이며 실제 금리는 금감원 금융상품통합비교공시(finlife) 확인. 갱신형 2년 단위."
+    },
+    {
+      "id": "didimdol-general",
+      "name": "디딤돌대출 (일반)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "무주택 서민 대표 정책 주택구입대출",
+      "eligibility": {
+        "incomeMaxCombined": 6000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 50000
+      },
+      "limit": {
+        "maxAmount": 20000,
+        "ltv": 0.7,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류",
+        "등기사항전부증명서"
+      ],
+      "notes": "주택가 5억 이하·전용 85㎡ 이하. 금리 소득·기간구간별 차등(2.85~4.15%), 고시 확인 요망. 30년 만기 기준."
+    },
+    {
+      "id": "didimdol-first",
+      "name": "디딤돌대출 (생애최초)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "생애최초 구입자 · 소득요건 완화 + LTV 80%",
+      "eligibility": {
+        "incomeMaxCombined": 7000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 50000,
+        "firstTimeBuyerOnly": true
+      },
+      "limit": {
+        "maxAmount": 24000,
+        "ltv": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          },
+          {
+            "incomeMax": 7000,
+            "rate": 3.8
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류",
+        "무주택 이력 확인 서류"
+      ],
+      "notes": "생애최초(세대 전원 주택 소유 이력 없음). LTV 80%는 규제지역에서는 규제 LTV(40%)가 우선 적용됨."
+    },
+    {
+      "id": "didimdol-newlywed",
+      "name": "디딤돌대출 (신혼)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "신혼부부 · 소득 8,500만원까지 · 한도 3.2억",
+      "eligibility": {
+        "incomeMaxCombined": 8500,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 60000,
+        "newlywedOnly": true
+      },
+      "limit": {
+        "maxAmount": 32000,
+        "ltv": 0.7,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 2.85
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 3.2
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 3.55
+          },
+          {
+            "incomeMax": 7000,
+            "rate": 3.8
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 4.15
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "혼인관계증명서",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 주택가 6억 이하."
+    },
+    {
+      "id": "newborn-purchase",
+      "name": "신생아특례 디딤돌대출 (구입)",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "출산 2년 내 가구 · 최대 4억 · 특례금리",
+      "eligibility": {
+        "incomeMaxCombined": 13000,
+        "incomeMaxDual": 20000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "householderRequired": true,
+        "areaMaxM2": 85,
+        "priceMax": 90000,
+        "newbornRequired": true
+      },
+      "limit": {
+        "maxAmount": 40000,
+        "ltv": 0.7,
+        "ltvFirstTime": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "incomeTable",
+        "table": [
+          {
+            "incomeMax": 2000,
+            "rate": 1.8
+          },
+          {
+            "incomeMax": 4000,
+            "rate": 2.1
+          },
+          {
+            "incomeMax": 6000,
+            "rate": 2.4
+          },
+          {
+            "incomeMax": 8500,
+            "rate": 2.7
+          },
+          {
+            "incomeMax": 10000,
+            "rate": 3.0
+          },
+          {
+            "incomeMax": 13000,
+            "rate": 3.3
+          },
+          {
+            "incomeMax": 20000,
+            "rate": 4.5
+          }
+        ]
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 30
+      },
+      "documents": [
+        "매매계약서",
+        "가족관계증명서(자녀 출생 확인)",
+        "주민등록등본",
+        "소득증빙",
+        "자산 심사 서류"
+      ],
+      "notes": "2023.1.1 이후 출생, 출생 2년 이내. 부부합산 1.3억(맞벌이 2억). 특례금리 기본 5년(추가 출산 시 연장). 주택가 9억 이하. 1주택 대환도 가능(본 계산기는 무주택 기준). 고시 확인 요망."
+    },
+    {
+      "id": "bogeumjari",
+      "name": "보금자리론",
+      "category": "구입",
+      "type": "정부정책",
+      "tagline": "주금공 장기 고정금리 · DSR 미적용",
+      "eligibility": {
+        "incomeMaxCombined": 7000,
+        "assetMax": 50600,
+        "homelessRequired": true,
+        "priceMax": 60000
+      },
+      "limit": {
+        "maxAmount": 36000,
+        "maxAmountFirstTime": 42000,
+        "ltv": 0.7,
+        "ltvFirstTime": 0.8,
+        "dti": 0.6
+      },
+      "rate": {
+        "kind": "fixed",
+        "rateMin": 4.7,
+        "rateMax": 5.0
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등",
+        "체증식"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "소득요건: 신혼 8,500만·다자녀 최대 1억까지 완화(본 계산기는 기본 7,000만 기준). 전 기간 고정금리. 주금공(hf.go.kr) 고시 확인 요망."
+    },
+    {
+      "id": "bank-mortgage-var",
+      "name": "시중은행 주택담보대출 (변동금리)",
+      "category": "구입",
+      "type": "시중은행",
+      "tagline": "코픽스 연동 변동금리 · 6개월 주기 변동",
+      "eligibility": {},
+      "limit": {
+        "maxAmount": 100000,
+        "ltv": 0.7,
+        "dsr": 0.4
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "코픽스신규",
+        "spreadMin": 1.3,
+        "spreadMax": 2.6
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이)."
+    },
+    {
+      "id": "bank-mortgage-mixed",
+      "name": "시중은행 주택담보대출 (혼합형 5년 고정)",
+      "category": "구입",
+      "type": "시중은행",
+      "tagline": "5년 고정 후 변동 · 금리 예측 가능성↑",
+      "eligibility": {},
+      "limit": {
+        "maxAmount": 100000,
+        "ltv": 0.7,
+        "dsr": 0.4
+      },
+      "rate": {
+        "kind": "baseSpread",
+        "base": "금융채5년",
+        "spreadMin": 0.8,
+        "spreadMax": 1.7
+      },
+      "repaymentTypes": [
+        "원리금균등",
+        "원금균등"
+      ],
+      "termYears": {
+        "min": 10,
+        "max": 40
+      },
+      "documents": [
+        "매매계약서",
+        "주민등록등본",
+        "소득증빙",
+        "등기사항전부증명서"
+      ],
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이)."
+    }
+  ]
+}
