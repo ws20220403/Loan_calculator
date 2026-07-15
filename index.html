@@ -271,6 +271,16 @@
         <p class="ls-warn" id="lsWarn">⚠️ 이 브라우저는 저장이 불가능합니다(시크릿 모드 등). 1회성 계산은 가능합니다.</p>
       </div>
     </div>
+    <div class="card" id="syncCard" style="display:none">
+      <h2>☁️ 구글 Drive 동기화</h2>
+      <p class="desc">같은 구글 계정으로 연결하면 PC·모바일 어디서든 같은 프로필을 사용합니다.
+        프로필은 <b>내 Drive의 앱 전용 숨김 공간</b>에만 저장되며, 이 앱 외에는 접근할 수 없습니다.</p>
+      <p class="profile-summary" id="syncStatus">연결 안 됨 — 이 기기에만 저장 중</p>
+      <div class="btn-row">
+        <button class="btn ghost" id="connectBtn" onclick="connectGoogle()">🔗 구글 계정 연결</button>
+        <button class="btn ghost" id="syncNowBtn" onclick="syncNow(true)" style="display:none">🔄 지금 동기화</button>
+      </div>
+    </div>
   </section>
 
   <!-- ================= 계산 탭 ================= -->
@@ -1365,6 +1375,7 @@ function saveProfile() {
   } else {
     document.getElementById("lsWarn").style.display = "block";
   }
+  pushProfileIfConnected(p);   // 구글 Drive 연결 시 클라우드에도 저장
   renderProfileSummary(p);
   showTab("calc");
 }
@@ -1420,6 +1431,138 @@ function importProfile(file) {
   };
   reader.readAsText(file);
   document.getElementById("importFile").value = "";
+}
+
+/* ---------- 구글 Drive 프로필 동기화 (appDataFolder) ----------
+   같은 구글 계정으로 로그인한 모든 기기에서 동일 프로필 사용.
+   프로필은 Drive의 앱 전용 숨김 공간(appDataFolder)에만 저장된다.
+   GOOGLE_CLIENT_ID가 비어 있거나 file://로 열면 카드 자체가 숨겨진다. */
+const GOOGLE_CLIENT_ID = "";  // Google Cloud 콘솔의 OAuth 웹 클라이언트 ID
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+const DRIVE_FILENAME = "loan-calc-profile.json";
+let gsiTokenClient = null;
+let gAccessToken = null;
+let gTokenExpireAt = 0;
+let driveFileId = null;
+let _tokenResolve = null, _tokenReject = null;
+
+function setSyncStatus(msg) { const el = document.getElementById("syncStatus"); if (el) el.textContent = msg; }
+
+function initSyncCard() {
+  if (!GOOGLE_CLIENT_ID || location.protocol === "file:") return;  // 미설정·로컬 파일이면 비활성
+  const s = document.createElement("script");
+  s.src = "https://accounts.google.com/gsi/client";
+  s.async = true;
+  s.onload = () => {
+    gsiTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: (resp) => {
+        if (resp && resp.access_token) {
+          gAccessToken = resp.access_token;
+          gTokenExpireAt = Date.now() + (Number(resp.expires_in || 3600) - 60) * 1000;  // 60초 여유(선제 갱신)
+          if (_tokenResolve) _tokenResolve();
+        } else if (_tokenReject) _tokenReject(resp);
+        _tokenResolve = _tokenReject = null;
+      }
+    });
+    document.getElementById("syncCard").style.display = "";
+  };
+  document.head.appendChild(s);
+}
+function tokenValid() { return gAccessToken && Date.now() < gTokenExpireAt; }
+function ensureToken(interactive) {
+  if (tokenValid()) return Promise.resolve();
+  if (!gsiTokenClient) return Promise.reject(new Error("구글 로그인 모듈 미로드"));
+  return new Promise((resolve, reject) => {
+    _tokenResolve = resolve; _tokenReject = reject;
+    // 이미 동의한 계정은 prompt "" 로 조용히 갱신, 최초 연결만 동의창
+    gsiTokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
+  });
+}
+async function driveApi(url, options = {}) {
+  options.headers = Object.assign({ Authorization: "Bearer " + gAccessToken }, options.headers || {});
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error("Drive API " + res.status + " " + (await res.text()).slice(0, 120));
+  return res;
+}
+async function findDriveFile() {
+  const q = encodeURIComponent(`name='${DRIVE_FILENAME}'`);
+  const res = await driveApi(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,modifiedTime)`);
+  const j = await res.json();
+  driveFileId = j.files && j.files.length ? j.files[0].id : null;
+  return driveFileId;
+}
+async function readDriveProfile() {
+  if (!driveFileId) return null;
+  const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`);
+  try { return await res.json(); } catch (e) { return null; }
+}
+async function writeDriveProfile(profile) {
+  const body = JSON.stringify(profile);
+  if (driveFileId) {
+    await driveApi(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body });
+  } else {
+    // multipart 생성: 메타데이터(appDataFolder) + 내용
+    const boundary = "loanCalcBoundary";
+    const multipart =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+      JSON.stringify({ name: DRIVE_FILENAME, parents: ["appDataFolder"] }) +
+      `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+    const res = await driveApi(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`,
+      { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body: multipart });
+    driveFileId = (await res.json()).id;
+  }
+}
+async function connectGoogle() {
+  try {
+    setSyncStatus("연결 중...");
+    await ensureToken(true);
+    document.getElementById("connectBtn").style.display = "none";
+    document.getElementById("syncNowBtn").style.display = "";
+    await syncNow(false);
+  } catch (e) {
+    setSyncStatus("연결 실패 — " + (e.message || "팝업이 차단되었는지 확인하세요"));
+  }
+}
+// 동기화 규칙: updatedAt이 최신인 쪽이 이긴다 (물줘! 교훈 — 전체 재생성 금지, 병합만)
+async function syncNow(interactive) {
+  try {
+    setSyncStatus("동기화 중...");
+    await ensureToken(!!interactive && !tokenValid());
+    await findDriveFile();
+    const remote = await readDriveProfile();
+    const local = loadProfile();
+    const localValid = local && !validateProfile(local).length;
+    const remoteValid = remote && !validateProfile(remote).length;
+    if (remoteValid && (!localValid || new Date(remote.updatedAt) > new Date(local.updatedAt))) {
+      if (lsAvailable()) localStorage.setItem(LS_KEY, JSON.stringify(remote));
+      fillProfileForm(remote);
+      renderProfileSummary(remote);
+      setSyncStatus(`✅ 클라우드 프로필을 불러왔습니다 (저장 시각 ${new Date(remote.updatedAt).toLocaleString("ko-KR")})`);
+    } else if (localValid && (!remoteValid || new Date(local.updatedAt) > new Date(remote.updatedAt))) {
+      await writeDriveProfile(local);
+      setSyncStatus("✅ 이 기기의 프로필을 클라우드에 저장했습니다");
+    } else if (localValid && remoteValid) {
+      setSyncStatus("✅ 이미 최신 상태입니다");
+    } else {
+      setSyncStatus("연결됨 — 저장된 프로필이 아직 없습니다. 프로필 저장 시 클라우드에도 올라갑니다");
+    }
+  } catch (e) {
+    setSyncStatus("동기화 실패 — " + (e.message || e));
+  }
+}
+// 프로필 저장 시 클라우드에도 자동 반영 (연결된 경우)
+async function pushProfileIfConnected(profile) {
+  if (!tokenValid()) return;
+  try {
+    if (!driveFileId) await findDriveFile();
+    await writeDriveProfile(profile);
+    setSyncStatus("✅ 클라우드에 저장됨 " + new Date().toLocaleTimeString("ko-KR"));
+  } catch (e) {
+    setSyncStatus("⚠️ 클라우드 저장 실패(로컬에는 저장됨) — " + (e.message || e));
+  }
 }
 
 /* ---------- 자격 판별 ---------- */
@@ -2103,6 +2246,8 @@ function updateMoneyHints() { document.querySelectorAll("input.money").forEach(u
     renderProfileSummary(null);
     showTab("profile");
   }
+
+  initSyncCard();   // 구글 Drive 동기화 (클라이언트 ID 설정 시에만 표시)
 
   // 외부 데이터는 비동기로 로드 (사용할 때마다 최신 반영)
   renderDataDate();
