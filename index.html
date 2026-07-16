@@ -1195,7 +1195,8 @@
         "소득증빙",
         "등기사항전부증명서"
       ],
-      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이). · finlife 62개 옵션 기준 2026-07-16"
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이). · finlife 62개 옵션 기준 2026-07-16",
+      "variability": "변동"
     },
     {
       "id": "bank-mortgage-mixed",
@@ -1228,7 +1229,8 @@
         "소득증빙",
         "등기사항전부증명서"
       ],
-      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이). · finlife 48개 옵션 기준 2026-07-16"
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이). · finlife 48개 옵션 기준 2026-07-16",
+      "variability": "혼합"
     }
   ],
   "scrapeWarnings": [],
@@ -2085,6 +2087,7 @@ function importProfile(file) {
       if (validateProfile(p).length) { alert("프로필 파일 형식이 올바르지 않습니다."); return; }
       fillProfileForm(p);
       if (lsAvailable()) localStorage.setItem(LS_KEY, JSON.stringify(p));
+      pushProfileIfConnected(p);   // 가져온 프로필도 클라우드에 반영
       renderProfileSummary(p);
       const note = document.getElementById("saveNote");
       note.textContent = "✅ 프로필을 가져와 저장했습니다";
@@ -2103,6 +2106,7 @@ function importProfile(file) {
 const GOOGLE_CLIENT_ID = "626208204338-eb0mi8se9kol4p36dk64hi5qogvfpnrc.apps.googleusercontent.com";  // Google Cloud 콘솔의 OAuth 웹 클라이언트 ID (공개값)
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 const DRIVE_FILENAME = "loan-calc-profile.json";
+const GSYNC_FLAG = "loanCalc.gsync.v1";   // 이 기기에서 구글 연결에 성공한 적 있음
 let gsiTokenClient = null;
 let gAccessToken = null;
 let gTokenExpireAt = 0;
@@ -2130,6 +2134,14 @@ function initSyncCard() {
       }
     });
     document.getElementById("syncCard").style.display = "";
+    // 이 기기에서 연결한 적이 있으면 조용히 재연결 시도 (실패해도 무시 — 버튼으로 수동 연결 가능)
+    if (lsAvailable() && localStorage.getItem(GSYNC_FLAG) === "1") {
+      ensureToken(false).then(() => {
+        document.getElementById("connectBtn").style.display = "none";
+        document.getElementById("syncNowBtn").style.display = "";
+        return syncNow(false);
+      }).catch(() => { setSyncStatus("연결 안 됨 — [구글 계정 연결]을 눌러 다시 연결하세요"); });
+    }
   };
   document.head.appendChild(s);
 }
@@ -2182,6 +2194,7 @@ async function connectGoogle() {
   try {
     setSyncStatus("연결 중...");
     await ensureToken(true);
+    if (lsAvailable()) localStorage.setItem(GSYNC_FLAG, "1");
     document.getElementById("connectBtn").style.display = "none";
     document.getElementById("syncNowBtn").style.display = "";
     await syncNow(false);
@@ -2338,13 +2351,15 @@ function applyDiscount(rate, disc) {
 }
 
 /* ---------- 한도 계산: 여러 상한의 최솟값 (만원) ---------- */
-// 스트레스 DSR 가산금리(간이): 변동성 있는 상품(baseSpread)의 DSR 한도 계산에만 가산
+// 스트레스 DSR 가산금리(간이): 금리 변동성이 있는 상품의 DSR 한도 계산에만 가산.
+// 변동성 판별은 상품의 정적 필드 variability("변동"|"혼합")로 한다 —
+// rate.kind는 finlife 자동갱신이 "fixed"로 바꿔버리므로 판별 기준으로 쓰면 안 됨.
 function stressAdd(prod, listing) {
-  if (prod.rate.kind !== "baseSpread" || !prod.limit.dsr) return 0;
+  if (!prod.limit.dsr || !prod.variability) return 0;
   const reg = LOAN_DATA.regulation;
   let s = listing.regulated ? reg.stressRegulated
         : (regionGroup(listing.region) === "수도권" ? reg.stressMetro : reg.stressOther);
-  if (prod.rate.base === "금융채5년") s *= reg.stressMixedFactor;  // 혼합형 완화 (간이)
+  if (prod.variability === "혼합") s *= reg.stressMixedFactor;  // 혼합형 완화 (간이)
   return round2(s);
 }
 function computeLimit(prod, p, listing, rateMax, termYears) {
@@ -2484,12 +2499,14 @@ function fillListingForm(l) {
   document.getElementById("l_region").value = l.region;
   syncRegionFields();
   if (l.region === "수도권") document.getElementById("l_regulated").value = (l.regulated ? "Y" : "N");
+  // 기록(JSON) 복원 시 NaN은 null로 저장돼 있으므로 null도 빈칸 처리
+  const moneyOrBlank = (v) => (v == null || isNaN(v)) ? "" : comma(v);
   document.getElementById("l_area").value = l.area;
-  document.getElementById("l_price").value = isNaN(l.price) ? "" : comma(l.price);
-  document.getElementById("l_equity").value = isNaN(l.equity) ? "" : comma(l.equity);
-  document.getElementById("l_deposit").value = isNaN(l.deposit) ? "" : comma(l.deposit);
-  document.getElementById("l_rent").value = isNaN(l.rent) ? "" : comma(l.rent);
-  document.getElementById("l_want").value = isNaN(l.want) ? "" : comma(l.want);
+  document.getElementById("l_price").value = moneyOrBlank(l.price);
+  document.getElementById("l_equity").value = moneyOrBlank(l.equity);
+  document.getElementById("l_deposit").value = moneyOrBlank(l.deposit);
+  document.getElementById("l_rent").value = moneyOrBlank(l.rent);
+  document.getElementById("l_want").value = moneyOrBlank(l.want);
   document.getElementById("l_term").value = l.term;
   updateMoneyHints();
 }
@@ -2755,7 +2772,9 @@ function openModal(prodId) {
     const base = LOAN_DATA.baseRates[prod.rate.base] ?? 0;
     rateHtml = `<p>${esc(prod.rate.base)} ${base.toFixed(2)}% + 가산 ${prod.rate.spreadMin}~${prod.rate.spreadMax}%p = 연 ${round2(base + prod.rate.spreadMin).toFixed(2)}~${round2(base + prod.rate.spreadMax).toFixed(2)}%</p>`;
   } else {
-    rateHtml = `<p>연 ${prod.rate.rateMin.toFixed(2)}${prod.rate.rateMin !== prod.rate.rateMax ? "~" + prod.rate.rateMax.toFixed(2) : ""}% (고정)</p>`;
+    // kind "fixed": 단일값은 고정금리, 구간은 시장 금리 범위(finlife 수집치)
+    const single = prod.rate.rateMin === prod.rate.rateMax;
+    rateHtml = `<p>연 ${prod.rate.rateMin.toFixed(2)}${single ? "% (고정)" : "~" + prod.rate.rateMax.toFixed(2) + "% (은행·우대조건별 구간)"}</p>`;
   }
   const body = `
     <h3>${esc(prod.name)}</h3>
@@ -2900,8 +2919,6 @@ function attachMoneyInputs() {
     inp.addEventListener("input", () => {
       const v = parseMoney(inp.value);
       inp.value = isNaN(v) ? "" : comma(v);
-      const hint = inp.closest(".field").querySelector(".hint");
-      if (hint && !hint.dataset.fixed) hint.dataset.orig = hint.dataset.orig ?? hint.textContent;
       updateMoneyHint(inp);
     });
   });
@@ -2910,8 +2927,10 @@ function updateMoneyHint(inp) {
   const v = parseMoney(inp.value);
   const hint = inp.closest(".field").querySelector(".hint");
   if (!hint) return;
+  // 최초 호출 시점의 문구(설명 힌트)를 원본으로 보존 — "= 금액" 표시가 원본을 덮어쓰지 않도록
+  if (hint.dataset.orig === undefined) hint.dataset.orig = hint.textContent;
   if (!isNaN(v) && v > 0) hint.textContent = "= " + manwonToKorean(v);
-  else hint.textContent = hint.dataset.orig || "";
+  else hint.textContent = hint.dataset.orig;
 }
 function updateMoneyHints() { document.querySelectorAll("input.money").forEach(updateMoneyHint); }
 
