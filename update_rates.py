@@ -66,22 +66,30 @@ POLICY_SOURCES = [
 # ---------------------------------------------------------------------------
 # 공통 유틸
 # ---------------------------------------------------------------------------
-def http_bytes(url, post_data=None):
-    """GET/POST 공통 요청. 사내망 SSL 검사 환경에서는 인증서 검증 폴백."""
-    req = urllib.request.Request(url, data=post_data, headers=UA_HEADERS)
-    try:
-        with urllib.request.urlopen(req, timeout=30) as res:
-            return res.read()
-    except urllib.error.URLError as e:
-        # 사내망 SSL 검사 등으로 인증서 검증이 불가한 환경 폴백 (공개 금리 페이지 + 값 범위 검증으로 위험 완화)
-        if "CERTIFICATE_VERIFY_FAILED" not in str(e):
-            raise
-        import ssl
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        with urllib.request.urlopen(req, timeout=30, context=ctx) as res:
-            return res.read()
+def http_bytes(url, post_data=None, retries=2):
+    """GET/POST 공통 요청. 일시적 타임아웃 재시도 + 사내망 SSL 검사 환경 인증서 검증 폴백."""
+    import time
+    last_err = None
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(url, data=post_data, headers=UA_HEADERS)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as res:
+                return res.read()
+        except urllib.error.URLError as e:
+            # 사내망 SSL 검사 등으로 인증서 검증이 불가한 환경 폴백 (공개 금리 페이지 + 값 범위 검증으로 위험 완화)
+            if "CERTIFICATE_VERIFY_FAILED" in str(e):
+                import ssl
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                with urllib.request.urlopen(req, timeout=30, context=ctx) as res:
+                    return res.read()
+            last_err = e            # 타임아웃 등 일시 오류 → 재시도
+        except TimeoutError as e:
+            last_err = e
+        if attempt < retries:
+            time.sleep(3)
+    raise last_err
 
 
 def fetch_html(url):
@@ -309,24 +317,50 @@ def update_policy(data, today, warnings):
 
 
 def fetch_finlife(api_name, auth_key):
-    """finlife API 한 종을 페이지 순회하며 optionList(금리 옵션)를 모아 반환."""
-    options = []
+    """finlife API 한 종을 페이지 순회하며 (baseList, optionList)를 모아 반환."""
+    bases, options = [], []
     page = 1
     while True:
         url = (f"{FINLIFE_BASE}/{api_name}.json"
                f"?auth={auth_key}&topFinGrpNo={TOP_FIN_GRP}&pageNo={page}")
-        req = urllib.request.Request(url, headers=UA_HEADERS)
-        with urllib.request.urlopen(req, timeout=30) as res:
-            payload = json.loads(res.read().decode("utf-8"))
+        payload = json.loads(http_bytes(url).decode("utf-8"))
         result = payload.get("result", {})
         if result.get("err_cd") not in ("000", None):
             raise RuntimeError(f"finlife API 오류({api_name}): {result.get('err_cd')} {result.get('err_msg')}")
+        bases.extend(result.get("baseList") or [])
         options.extend(result.get("optionList") or [])
         max_page = int(result.get("max_page_no") or 1)
         if page >= max_page:
             break
         page += 1
-    return options
+    return bases, options
+
+
+def bank_details(bases, options, predicate=None):
+    """은행별 상품 상세 목록: [{bank, name, rateMin, rateMax, limit}] (최저금리순)."""
+    meta = {}
+    for b in bases:
+        meta[(b.get("fin_co_no"), b.get("fin_prdt_cd"))] = {
+            "bank": b.get("kor_co_nm", ""), "name": b.get("fin_prdt_nm", ""),
+            "limit": (b.get("loan_lmt") or "").strip(),
+        }
+    agg = {}
+    for o in options:
+        if predicate and not predicate(o):
+            continue
+        key = (o.get("fin_co_no"), o.get("fin_prdt_cd"))
+        try:
+            lo, hi = float(o.get("lend_rate_min")), float(o.get("lend_rate_max"))
+        except (TypeError, ValueError):
+            continue
+        cur = agg.setdefault(key, [lo, hi])
+        cur[0], cur[1] = min(cur[0], lo), max(cur[1], hi)
+    out = []
+    for key, (lo, hi) in agg.items():
+        m = meta.get(key, {"bank": "", "name": "", "limit": ""})
+        out.append({"bank": m["bank"], "name": m["name"], "rateMin": round(lo, 2), "rateMax": round(hi, 2), "limit": m["limit"]})
+    out.sort(key=lambda x: (x["rateMin"], x["rateMax"]))
+    return out
 
 
 def rate_range(options, predicate=None):
@@ -365,26 +399,30 @@ def is_variable(option):
 
 
 def update_banks(data, auth_key, today, warnings):
-    """finlife API로 시중은행 금리 갱신. 성공 상품 수를 반환."""
+    """finlife API로 시중은행 금리 + 은행별 상세 목록(bankDetails) 갱신. 성공 상품 수를 반환."""
     ok_count = 0
+    details = data.setdefault("bankDetails", {})
     try:
-        rent_opts = fetch_finlife("rentHouseLoanProductsSearch", auth_key)
+        rent_bases, rent_opts = fetch_finlife("rentHouseLoanProductsSearch", auth_key)
         r = rate_range(rent_opts)
         if r:
             set_fixed_rate(data, "bank-jeonse", *r, today)
+            details["jeonse"] = bank_details(rent_bases, rent_opts)
             ok_count += 1
     except Exception as e:
         warnings.append(f"bank-jeonse: finlife 실패 — {e}")
         print(f"  ⚠️ bank-jeonse: {e}")
     try:
-        mort_opts = fetch_finlife("mortgageLoanProductsSearch", auth_key)
+        mort_bases, mort_opts = fetch_finlife("mortgageLoanProductsSearch", auth_key)
         rv = rate_range(mort_opts, is_variable)
         if rv:
             set_fixed_rate(data, "bank-mortgage-var", *rv, today)
+            details["mortgageVar"] = bank_details(mort_bases, mort_opts, is_variable)
             ok_count += 1
         rf = rate_range(mort_opts, lambda o: not is_variable(o))
         if rf:
             set_fixed_rate(data, "bank-mortgage-mixed", *rf, today)
+            details["mortgageMixed"] = bank_details(mort_bases, mort_opts, lambda o: not is_variable(o))
             ok_count += 1
     except Exception as e:
         warnings.append(f"bank-mortgage: finlife 실패 — {e}")

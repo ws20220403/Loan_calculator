@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%232563eb"/><path d="M32 10 L56 31 H49 V52 H15 V31 H8 Z" fill="white"/><text x="32" y="48" font-size="19" font-weight="bold" text-anchor="middle" fill="%232563eb" font-family="Arial, sans-serif">%E2%82%A9</text></svg>'>
 <title>주택 대출 계산기</title>
 <style>
   :root {
@@ -91,6 +93,13 @@
   details.docs summary { cursor: pointer; font-weight: 600; color: var(--ink); font-size: 0.8rem; }
   details.docs ul { margin: 6px 0 0 18px; }
   details.docs .note { margin-top: 6px; font-size: 0.74rem; }
+  /* 은행별 비교표 */
+  .bt-wrap { overflow-x: auto; margin-top: 6px; }
+  .bankTable { width: 100%; border-collapse: collapse; font-size: 0.75rem; white-space: nowrap; }
+  .bankTable th, .bankTable td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+  .bankTable th { background: #f9fafb; font-weight: 600; position: sticky; top: 0; }
+  .bankTable td:nth-child(2) { white-space: normal; min-width: 140px; }
+  .bankTable td:nth-child(4) { white-space: normal; min-width: 110px; max-width: 220px; }
   .fail { background: #fbfbfc; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; }
   .fail h4 { font-size: 0.9rem; margin-bottom: 4px; }
   .fail ul { margin-left: 18px; font-size: 0.78rem; color: var(--bad); }
@@ -208,7 +217,7 @@
           <span class="err"></span>
         </div>
         <div class="field" data-f="housing">
-          <label>주택 보유 <span class="req">*</span></label>
+          <label>주택 보유 (세대 기준·부부 합산) <span class="req">*</span><button class="tip" data-tip="본인+배우자+세대원 전체 기준입니다. 배우자가 주택을 갖고 있으면 무주택이 아닙니다.">?</button></label>
           <select id="p_housing">
             <option value="">선택</option>
             <option value="무주택">무주택</option>
@@ -254,7 +263,7 @@
           <span class="err">중소기업 재직 여부를 선택하세요</span>
         </div>
         <div class="field" data-f="existingDebt">
-          <label>기존 대출 월 상환액 합계 (만원) <span class="req">*</span><button class="tip" data-tip="현재 갚고 있는 모든 대출의 월 상환액 합계. DSR(총부채원리금상환비율) 계산에서 신규 대출 한도를 줄입니다.">?</button></label>
+          <label>기존 대출 월 상환액 합계 (부부 합산, 만원) <span class="req">*</span><button class="tip" data-tip="본인+배우자가 현재 갚고 있는 모든 대출의 월 상환액 합계. DSR(총부채원리금상환비율) 계산에서 신규 대출 한도를 줄입니다.">?</button></label>
           <input type="text" inputmode="numeric" id="p_existingDebt" class="money" placeholder="없으면 0">
           <span class="hint">DSR(총부채원리금상환비율) 계산에 사용</span>
           <span class="err">기존 대출 월 상환액을 입력하세요 (없으면 0)</span>
@@ -297,6 +306,15 @@
             <label><input type="radio" name="dealType" value="전세" checked><span>전세</span></label>
             <label><input type="radio" name="dealType" value="월세"><span>월세(보증부)</span></label>
           </div>
+        </div>
+        <div class="field" data-f="supplyType" id="f_supplyType">
+          <label>공급 유형 <span class="req">*</span><button class="tip" data-tip="공공임대(LH·SH 등)는 보증금 외에 월임대료가 있는 경우가 많아 따로 입력받습니다. 입주 자격 충족 여부는 본인이 확인하는 전제입니다.">?</button></label>
+          <select id="l_supplyType">
+            <option value="일반">일반 (민간 임대차)</option>
+            <option value="공공">공공임대 (LH·SH 등)</option>
+          </select>
+          <span class="hint"></span>
+          <span class="err"></span>
         </div>
         <div class="field" data-f="houseType">
           <label>주택 종류 <span class="req">*</span></label>
@@ -354,10 +372,10 @@
           <span class="err">보증금을 입력하세요</span>
         </div>
         <div class="field" data-f="rent" id="f_rent" style="display:none">
-          <label>월세 (만원) <span class="req">*</span></label>
+          <label id="rentLabel">월세 (만원) <span class="req">*</span></label>
           <input type="text" inputmode="numeric" id="l_rent" class="money" placeholder="예: 50">
           <span class="hint">월 주거비에 합산됩니다</span>
-          <span class="err">월세를 입력하세요</span>
+          <span class="err">월세(월임대료)를 입력하세요 (없으면 0)</span>
         </div>
         <div class="field" data-f="want">
           <label>희망 대출 금액 (만원, 선택)</label>
@@ -420,7 +438,7 @@
      ============================================================ -->
 <script type="application/json" id="loan-data">
 {
-  "dataDate": "2026-07-15",
+  "dataDate": "2026-07-16",
   "baseRates": {
     "코픽스신규": 2.55,
     "금융채5년": 2.9
@@ -609,7 +627,7 @@
         "소득증빙(원천징수영수증 등)",
         "재직증명서"
       ],
-      "notes": "금리는 소득구간·보증금 구간별 차등(2.5~3.5%). 정확한 값은 주택도시기금 고시 확인. 우대금리(다자녀 등) 별도. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "금리는 소득구간·보증금 구간별 차등(2.5~3.5%). 정확한 값은 주택도시기금 고시 확인. 우대금리(다자녀 등) 별도. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "butimok-newlywed",
@@ -671,7 +689,7 @@
         "소득증빙",
         "자산 심사 서류"
       ],
-      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 금리 소득구간별 차등, 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 금리 소득구간별 차등, 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "butimok-youth",
@@ -732,7 +750,7 @@
         "소득증빙",
         "재직증명서"
       ],
-      "notes": "만 19~34세(병역이행 시 최대 39세). 금리 소득구간별 차등, 고시 확인 요망. 중소기업 취업청년은 단독 상품 종료(2026 기준) — 이 상품에 우대금리 형태로 통합, 취급은행 문의. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "만 19~34세(병역이행 시 최대 39세). 금리 소득구간별 차등, 고시 확인 요망. 중소기업 취업청년은 단독 상품 종료(2026 기준) — 이 상품에 우대금리 형태로 통합, 취급은행 문의. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "newborn-jeonse",
@@ -815,7 +833,7 @@
         "소득증빙",
         "자산 심사 서류"
       ],
-      "notes": "2023.1.1 이후 출생 자녀, 출생 2년 이내 신청. 부부합산 1.3억(맞벌이 2억) 이하. 특례금리 적용기간 제한 있음. 추가 출산 시 우대. 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "2023.1.1 이후 출생 자녀, 출생 2년 이내 신청. 부부합산 1.3억(맞벌이 2억) 이하. 특례금리 적용기간 제한 있음. 추가 출산 시 우대. 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "bank-jeonse",
@@ -907,7 +925,7 @@
         "자산 심사 서류",
         "등기사항전부증명서"
       ],
-      "notes": "주택가 5억 이하·전용 85㎡ 이하. 금리 소득·기간구간별 차등(2.85~4.15%), 고시 확인 요망. 30년 만기 기준. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "주택가 5억 이하·전용 85㎡ 이하. 금리 소득·기간구간별 차등(2.85~4.15%), 고시 확인 요망. 30년 만기 기준. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "didimdol-first",
@@ -965,7 +983,7 @@
         "자산 심사 서류",
         "무주택 이력 확인 서류"
       ],
-      "notes": "생애최초(세대 전원 주택 소유 이력 없음). LTV 80%는 규제지역에서는 규제 LTV(40%)가 우선 적용됨. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "생애최초(세대 전원 주택 소유 이력 없음). LTV 80%는 규제지역에서는 규제 LTV(40%)가 우선 적용됨. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "didimdol-newlywed",
@@ -1023,7 +1041,7 @@
         "소득증빙",
         "자산 심사 서류"
       ],
-      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 주택가 6억 이하. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "혼인 7년 이내 또는 3개월 내 결혼예정. 주택가 6억 이하. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "newborn-purchase",
@@ -1103,7 +1121,7 @@
         "소득증빙",
         "자산 심사 서류"
       ],
-      "notes": "2023.1.1 이후 출생, 출생 2년 이내. 부부합산 1.3억(맞벌이 2억). 특례금리 기본 5년(추가 출산 시 연장). 주택가 9억 이하. 1주택 대환도 가능(본 계산기는 무주택 기준). 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "2023.1.1 이후 출생, 출생 2년 이내. 부부합산 1.3억(맞벌이 2억). 특례금리 기본 5년(추가 출산 시 연장). 주택가 9억 이하. 1주택 대환도 가능(본 계산기는 무주택 기준). 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "bogeumjari",
@@ -1144,7 +1162,7 @@
         "소득증빙",
         "등기사항전부증명서"
       ],
-      "notes": "소득요건: 신혼 8,500만·다자녀 최대 1억까지 완화(본 계산기는 기본 7,000만 기준). 전 기간 고정금리. 주금공(hf.go.kr) 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-15"
+      "notes": "소득요건: 신혼 8,500만·다자녀 최대 1억까지 완화(본 계산기는 기본 7,000만 기준). 전 기간 고정금리. 주금공(hf.go.kr) 고시 확인 요망. · 공식페이지 자동수집 기준 2026-07-16"
     },
     {
       "id": "bank-mortgage-var",
@@ -1213,10 +1231,7 @@
       "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이). · finlife 48개 옵션 기준 2026-07-15"
     }
   ],
-  "scrapeWarnings": [
-    "butimok-newlywed: 자동수집 실패 — <urlopen error timed out>",
-    "newborn-purchase: 자동수집 실패 — <urlopen error timed out>"
-  ]
+  "scrapeWarnings": []
 }
 </script>
 
@@ -1767,7 +1782,9 @@ function evaluateProduct(prod, p, listing, today, prefs) {
   const repayType = prod.repaymentTypes[0];
   const payMin = monthlyPayment(desired, rate.min, term, repayType);
   const payMax = monthlyPayment(desired, rate.max, term, repayType);
-  const rentWon = (listing.dealType === "월세" ? listing.rent : 0) * 10000;
+  // 월세 계약이거나 공공임대(전세형이라도 월임대료 존재 가능)면 임대료를 주거비에 합산
+  const hasRent = listing.dealType === "월세" || (listing.supplyType === "공공" && listing.dealType !== "매매");
+  const rentWon = (hasRent && !isNaN(listing.rent) ? listing.rent : 0) * 10000;
 
   // 월 주거비 총액 = 월세 + 이자 + 원금상환분
   const costMin = rentWon + payMin.total;
@@ -1800,6 +1817,7 @@ function readListingForm() {
   const region = document.getElementById("l_region").value;
   return {
     dealType,
+    supplyType: dealType === "매매" ? "일반" : document.getElementById("l_supplyType").value,
     houseType: document.getElementById("l_houseType").value,
     region,
     // 서울은 전역 규제지역(2026-07 기준). 경기·인천은 사용자 선택
@@ -1815,6 +1833,7 @@ function readListingForm() {
 }
 function fillListingForm(l) {
   document.querySelector(`input[name="dealType"][value="${l.dealType}"]`).checked = true;
+  document.getElementById("l_supplyType").value = l.supplyType || "일반";
   syncDealTypeFields();
   document.getElementById("l_houseType").value = l.houseType;
   document.getElementById("l_region").value = l.region;
@@ -1838,6 +1857,7 @@ function validateListing(l) {
   } else {
     if (isNaN(l.deposit) || l.deposit <= 0) fails.push("deposit");
     if (l.dealType === "월세" && (isNaN(l.rent) || l.rent <= 0)) fails.push("rent");
+    else if (l.supplyType === "공공" && isNaN(l.rent)) fails.push("rent");  // 공공임대: 0 허용, 미입력은 불가
   }
   if (isNaN(l.term) || l.term <= 0) fails.push("term");
   return fails;
@@ -1940,12 +1960,28 @@ function rangeText(min, max, unit, fmt) {
 }
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
 
+// 시중은행 통합 카드 ↔ finlife 은행별 상세(bankDetails) 매핑
+const BANK_DETAIL_KEY = { "bank-jeonse": "jeonse", "bank-mortgage-var": "mortgageVar", "bank-mortgage-mixed": "mortgageMixed" };
+function bankDetailHtml(prodId) {
+  const list = (LOAN_DATA.bankDetails || {})[BANK_DETAIL_KEY[prodId]] || [];
+  if (!list.length) return "";
+  const rows = list.map(b =>
+    `<tr><td>${esc(b.bank)}</td><td>${esc(b.name)}</td><td>${b.rateMin.toFixed(2)}~${b.rateMax.toFixed(2)}%</td><td>${esc(b.limit || "-")}</td></tr>`).join("");
+  return `<details class="docs" style="margin-bottom:6px"><summary>🏦 은행별 상품 비교 (${list.length}개 · 최저금리순)</summary>
+    <div class="bt-wrap"><table class="bankTable"><tr><th>은행</th><th>상품명</th><th>금리(연)</th><th>한도</th></tr>${rows}</table></div>
+    <p class="note">우대조건 충족 여부에 따라 실제 금리는 구간 내에서 달라집니다. 출처: 금융감독원 금융상품통합비교공시</p></details>`;
+}
+
 function renderResults() {
   const { fail, listing, globalWarns } = lastCalc;
   const ok = sortedOk();
   const area = document.getElementById("resultArea");
   let html = "";
   for (const w of globalWarns) html += `<div class="global-warn">⚠️ ${esc(w)}</div>`;
+  if (listing.supplyType === "공공" && listing.dealType !== "매매") {
+    html += `<div class="banner">🏢 <b>공공임대(LH·SH 등)</b> 기준 계산: 월임대료가 월 주거비·RIR에 합산되었습니다.
+      공공임대 보증금 대출은 기금(버팀목 계열) 이용이 일반적이며, 시중은행 전세대출은 기관·계약형태에 따라 취급이 제한될 수 있으니 은행에 확인하세요.</div>`;
+  }
 
   const sortLabels = { cost: "월 주거비 낮은 순", limit: "한도 높은 순", rir: "RIR 낮은 순" };
   html += `<div class="result-head"><h2>✅ 가능 상품</h2>
@@ -2015,6 +2051,7 @@ function renderResults() {
         <span>원리금 기준 ${rirFullTxt} ${rirBadge(r.rir.fullMax)}</span>
         <span>이자만 기준 ${rirIntTxt} ${rirBadge(r.rir.interestOnlyMax)}</span>
       </div>
+      ${bankDetailHtml(r.prod.id)}
       <details class="docs">
         <summary>필요 서류 · 비고</summary>
         <ul>${r.prod.documents.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
@@ -2112,8 +2149,10 @@ function pushHistory(listing, ok) {
 }
 function historySummary(h) {
   const l = h.listing;
-  const amount = l.dealType === "매매" ? `매매가 ${manwonToKorean(l.price)}` : `보증금 ${manwonToKorean(l.deposit)}${l.dealType === "월세" ? ` · 월세 ${comma(l.rent)}만` : ""}`;
-  return `[${l.dealType}] ${l.region} ${l.houseType} ${l.area}㎡ · ${amount}`;
+  const rentTag = (!isNaN(l.rent) && l.rent > 0 && l.dealType !== "매매") ? ` · 월 ${comma(l.rent)}만` : "";
+  const amount = l.dealType === "매매" ? `매매가 ${manwonToKorean(l.price)}` : `보증금 ${manwonToKorean(l.deposit)}${rentTag}`;
+  const pub = (l.supplyType === "공공" && l.dealType !== "매매") ? " 공공임대" : "";
+  return `[${l.dealType}${pub}] ${l.region} ${l.houseType} ${l.area}㎡ · ${amount}`;
 }
 function renderHistory() {
   const arr = loadHistory();
@@ -2187,8 +2226,16 @@ function syncDealTypeFields() {
   document.getElementById("f_price").style.display = t === "매매" ? "" : "none";
   document.getElementById("f_equity").style.display = t === "매매" ? "" : "none";
   document.getElementById("f_deposit").style.display = t === "매매" ? "none" : "";
-  document.getElementById("f_rent").style.display = t === "월세" ? "" : "none";
+  document.getElementById("f_supplyType").style.display = t === "매매" ? "none" : "";
   document.getElementById("l_term").value = t === "매매" ? 30 : 2;
+  syncSupplyFields();
+}
+// 공급 유형(일반/공공임대)에 따라 월임대료 필드 표시 — 공공임대는 전세 계약에도 월임대료가 흔함
+function syncSupplyFields() {
+  const t = document.querySelector('input[name="dealType"]:checked').value;
+  const isPublic = t !== "매매" && document.getElementById("l_supplyType").value === "공공";
+  document.getElementById("f_rent").style.display = (t === "월세" || isPublic) ? "" : "none";
+  document.getElementById("rentLabel").innerHTML = (t === "월세" ? "월세" : "월임대료") + ' (만원) <span class="req">*</span>';
 }
 // 지역에 따라 규제지역 선택 표시 (경기·인천만)
 function syncRegionFields() {
@@ -2230,6 +2277,7 @@ function updateMoneyHints() { document.querySelectorAll("input.money").forEach(u
   document.getElementById("p_kids").addEventListener("input", syncProfileConditionals);
   document.querySelectorAll('input[name="dealType"]').forEach(r => r.addEventListener("change", syncDealTypeFields));
   document.getElementById("l_region").addEventListener("change", syncRegionFields);
+  document.getElementById("l_supplyType").addEventListener("change", syncSupplyFields);
   document.getElementById("p_birth").addEventListener("change", () => {
     const v = document.getElementById("p_birth").value;
     document.getElementById("ageHint").textContent = v ? `만 ${fullAge(v, new Date())}세` : "";
