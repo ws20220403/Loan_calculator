@@ -429,7 +429,7 @@
         "소득증빙",
         "재직증명서"
       ],
-      "notes": "은행·보증기관(HF/HUG/SGI)별 한도·금리 상이. 대표 구간이며 실제 금리는 금감원 금융상품통합비교공시(finlife) 확인. 갱신형 2년 단위. · finlife 81개 옵션 기준 2026-07-15"
+      "notes": "은행·보증기관(HF/HUG/SGI)별 한도·금리 상이. 대표 구간이며 실제 금리는 금감원 금융상품통합비교공시(finlife) 확인. 갱신형 2년 단위. · finlife 81개 옵션 기준 2026-07-16"
     },
     {
       "id": "didimdol-general",
@@ -756,7 +756,7 @@
         "소득증빙",
         "등기사항전부증명서"
       ],
-      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이). · finlife 62개 옵션 기준 2026-07-15"
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제지역 LTV 40%·가격구간별 절대상한, 수도권 상한 6억 적용(2026-07 기준). DSR 한도에 스트레스 금리 가산 반영(간이). · finlife 62개 옵션 기준 2026-07-16"
     },
     {
       "id": "bank-mortgage-mixed",
@@ -789,8 +789,653 @@
         "소득증빙",
         "등기사항전부증명서"
       ],
-      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이). · finlife 48개 옵션 기준 2026-07-15"
+      "notes": "은행별 금리 상이 — 대표 구간이며 finlife(금감원) 확인. 규제 사항은 변동금리형과 동일. 혼합형은 스트레스 금리 60% 적용(간이). · finlife 48개 옵션 기준 2026-07-16"
     }
   ],
-  "scrapeWarnings": []
+  "scrapeWarnings": [],
+  "bankDetails": {
+    "jeonse": [
+      {
+        "bank": "농협은행주식회사",
+        "name": "NH전세대출(주택도시보증공사)",
+        "rateMin": 3.13,
+        "rateMax": 6.63,
+        "limit": "4억원"
+      },
+      {
+        "bank": "농협은행주식회사",
+        "name": "NH전세대출(서울보증보험)",
+        "rateMin": 3.19,
+        "rateMax": 6.69,
+        "limit": "5억원"
+      },
+      {
+        "bank": "농협은행주식회사",
+        "name": "NH전세대출(주택금융공사)",
+        "rateMin": 3.19,
+        "rateMax": 6.69,
+        "limit": "4억 44백만원"
+      },
+      {
+        "bank": "광주은행",
+        "name": "청년맞춤형 전월세보증금 대출",
+        "rateMin": 3.64,
+        "rateMax": 3.84,
+        "limit": "2억원"
+      },
+      {
+        "bank": "주식회사 카카오뱅크",
+        "name": "HF 전월세보증금 대출",
+        "rateMin": 3.64,
+        "rateMax": 4.82,
+        "limit": "최대 444백만원"
+      },
+      {
+        "bank": "국민은행",
+        "name": "KB주택전세자금대출",
+        "rateMin": 3.71,
+        "rateMax": 5.11,
+        "limit": "4.44억원"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리전세론(서울보증)",
+        "rateMin": 3.72,
+        "rateMax": 5.87,
+        "limit": "최대5억원"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리전세론(주택금융보증)",
+        "rateMin": 3.76,
+        "rateMax": 5.86,
+        "limit": "최대4.44억원"
+      },
+      {
+        "bank": "국민은행",
+        "name": "KB플러스전세자금대출",
+        "rateMin": 3.83,
+        "rateMax": 5.23,
+        "limit": "5억원"
+      },
+      {
+        "bank": "주식회사 카카오뱅크",
+        "name": "SGI 전월세보증금 대출",
+        "rateMin": 3.85,
+        "rateMax": 5.03,
+        "limit": "최대 500백만원"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "전월세보증금 대출",
+        "rateMin": 3.87,
+        "rateMax": 3.87,
+        "limit": "440백만원"
+      },
+      {
+        "bank": "토스뱅크 주식회사",
+        "name": "전월세보증금대출 플러스",
+        "rateMin": 3.88,
+        "rateMax": 3.88,
+        "limit": "최대 4억 4,000만원"
+      },
+      {
+        "bank": "중소기업은행",
+        "name": "IBK전세대출 (HF)",
+        "rateMin": 3.92,
+        "rateMax": 6.02,
+        "limit": "최대 2.2억원"
+      },
+      {
+        "bank": "중소기업은행",
+        "name": "IBK전세대출 (HUG)",
+        "rateMin": 3.93,
+        "rateMax": 6.02,
+        "limit": "최대 4억원"
+      },
+      {
+        "bank": "부산은행",
+        "name": "BNK프리미엄전세자금대출",
+        "rateMin": 3.97,
+        "rateMax": 6.41,
+        "limit": "최대500백만원"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한전세대출(주택금융공사)",
+        "rateMin": 4.02,
+        "rateMax": 5.56,
+        "limit": "- 최대:444백만원"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "고정금리 전월세보증금 대출",
+        "rateMin": 4.03,
+        "rateMax": 4.33,
+        "limit": "200백만원"
+      },
+      {
+        "bank": "중소기업은행",
+        "name": "IBK전세대출 (SGI)",
+        "rateMin": 4.04,
+        "rateMax": 6.18,
+        "limit": "최대 5억원"
+      },
+      {
+        "bank": "전북은행",
+        "name": "BEST전세자금대출Ⅱ",
+        "rateMin": 4.08,
+        "rateMax": 5.88,
+        "limit": "주택금융공사 ㅈ던세보증서 최대 발행한도에 보증비율을 적용한 금액"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한전세대출(서울보증)",
+        "rateMin": 4.12,
+        "rateMax": 5.24,
+        "limit": "- 최대:500백만원"
+      },
+      {
+        "bank": "주식회사 하나은행",
+        "name": "주택신보위탁발행보증서담보대출",
+        "rateMin": 4.13,
+        "rateMax": 5.53,
+        "limit": "444백만원"
+      },
+      {
+        "bank": "부산은행",
+        "name": "BNK전세안심대출",
+        "rateMin": 4.17,
+        "rateMax": 6.11,
+        "limit": "최대400백만원"
+      },
+      {
+        "bank": "부산은행",
+        "name": "BNK행복스케치전세자금대출",
+        "rateMin": 4.17,
+        "rateMax": 6.11,
+        "limit": "최대444백만원"
+      },
+      {
+        "bank": "전북은행",
+        "name": "JB전세자금대출",
+        "rateMin": 4.4,
+        "rateMax": 5.9,
+        "limit": "최저 5백만원, 최고 5억원 이내"
+      },
+      {
+        "bank": "수협은행",
+        "name": "Sh전세보증대출(서울보증보험)",
+        "rateMin": 4.41,
+        "rateMax": 5.61,
+        "limit": "최대 5억원"
+      },
+      {
+        "bank": "수협은행",
+        "name": "Sh전세보증대출(주택금융공사)",
+        "rateMin": 4.43,
+        "rateMax": 5.63,
+        "limit": "최대 4.44억원"
+      },
+      {
+        "bank": "주식회사 하나은행",
+        "name": "하나전세금안심대출",
+        "rateMin": 4.43,
+        "rateMax": 5.73,
+        "limit": "400백만원"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "무방문전세자금대출(주택금융공사)",
+        "rateMin": 4.44,
+        "rateMax": 4.44,
+        "limit": "220백만원"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "DGB 전세자금대출",
+        "rateMin": 4.44,
+        "rateMax": 4.94,
+        "limit": "440백만원"
+      },
+      {
+        "bank": "주식회사 하나은행",
+        "name": "우량주택전세론",
+        "rateMin": 4.44,
+        "rateMax": 5.74,
+        "limit": "500백만원"
+      },
+      {
+        "bank": "수협은행",
+        "name": "공공주택임차보증금담보대출",
+        "rateMin": 4.48,
+        "rateMax": 5.68,
+        "limit": "최대 5억원"
+      },
+      {
+        "bank": "수협은행",
+        "name": "Sh전세금안심대출",
+        "rateMin": 4.53,
+        "rateMax": 5.73,
+        "limit": "최대 4.5억원"
+      },
+      {
+        "bank": "한국스탠다드차타드은행",
+        "name": "전세담보대출",
+        "rateMin": 4.62,
+        "rateMax": 6.09,
+        "limit": "최대 5억원"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "무방문전세자금대출",
+        "rateMin": 4.74,
+        "rateMax": 4.74,
+        "limit": "500백만원"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "DGB POWER 전세보증대출",
+        "rateMin": 4.74,
+        "rateMax": 5.24,
+        "limit": "500백만원"
+      },
+      {
+        "bank": "경남은행",
+        "name": "전세자금대출(주택금융공사)",
+        "rateMin": 4.93,
+        "rateMax": 5.53,
+        "limit": "최대4.44억원"
+      },
+      {
+        "bank": "경남은행",
+        "name": "모바일전세자금대출\n(주택금융공사)",
+        "rateMin": 5.0,
+        "rateMax": 5.6,
+        "limit": "최대4.44억원"
+      },
+      {
+        "bank": "경남은행",
+        "name": "고정금리 전세자금대출(주택금융공사)",
+        "rateMin": 5.01,
+        "rateMax": 5.01,
+        "limit": "최대4억원"
+      },
+      {
+        "bank": "제주은행",
+        "name": "JJB일반전세자금대출",
+        "rateMin": 5.42,
+        "rateMax": 6.12,
+        "limit": "임차보증금의 80% 범위내 최고 444백만원"
+      },
+      {
+        "bank": "제주은행",
+        "name": "주택전세자금대출",
+        "rateMin": 5.47,
+        "rateMax": 6.17,
+        "limit": "임차보증금의 80%범위내"
+      },
+      {
+        "bank": "경남은행",
+        "name": "모바일전세자금대출(서울보증보험)",
+        "rateMin": 5.48,
+        "rateMax": 6.08,
+        "limit": "최대5억원"
+      }
+    ],
+    "mortgageVar": [
+      {
+        "bank": "경남은행",
+        "name": "집집마다 도움대출II",
+        "rateMin": 3.44,
+        "rateMax": 6.32,
+        "limit": "LTV 80% 이내"
+      },
+      {
+        "bank": "농협은행주식회사",
+        "name": "NH주택담보대출",
+        "rateMin": 3.78,
+        "rateMax": 6.69,
+        "limit": "해당 주택의 담보평가금액에 따라 산출된 가능금액 이내"
+      },
+      {
+        "bank": "경남은행",
+        "name": "BNK모바일주택담보대출",
+        "rateMin": 3.81,
+        "rateMax": 6.77,
+        "limit": "LTV 70% 이내(KB시세 확인 가능한 아파트만 가능)"
+      },
+      {
+        "bank": "중소기업은행",
+        "name": "IBK주택담보대출",
+        "rateMin": 3.92,
+        "rateMax": 4.9,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "주식회사 하나은행",
+        "name": "하나원큐아파트론2",
+        "rateMin": 4.04,
+        "rateMax": 5.24,
+        "limit": "담보별 가용가 범위내"
+      },
+      {
+        "bank": "전북은행",
+        "name": "JB해피홈론",
+        "rateMin": 4.05,
+        "rateMax": 6.37,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "주식회사 카카오뱅크",
+        "name": "주택담보대출",
+        "rateMin": 4.16,
+        "rateMax": 4.97,
+        "limit": "최대 10억원"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리아파트론",
+        "rateMin": 4.17,
+        "rateMax": 5.37,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리부동산론",
+        "rateMin": 4.17,
+        "rateMax": 5.37,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "부산은행",
+        "name": "BNK행복스케치 모기지론",
+        "rateMin": 4.19,
+        "rateMax": 6.79,
+        "limit": "지역에 따라 담보인정비율(LTV) 최대 80% 이내"
+      },
+      {
+        "bank": "한국스탠다드차타드은행",
+        "name": "주택담보대출",
+        "rateMin": 4.23,
+        "rateMax": 5.98,
+        "limit": "LTV 최대 80%"
+      },
+      {
+        "bank": "제주은행",
+        "name": "제주홈대출",
+        "rateMin": 4.25,
+        "rateMax": 5.82,
+        "limit": "감정가의 70%이내"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한주택대출(아파트)",
+        "rateMin": 4.26,
+        "rateMax": 4.86,
+        "limit": "-LTV40%"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "장기모기지론-코픽스6개월변동(생활)",
+        "rateMin": 4.28,
+        "rateMax": 5.38,
+        "limit": "담보인정비율(LTV) 70%"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "장기모기지론-코픽스6개월변동(구입)",
+        "rateMin": 4.28,
+        "rateMax": 5.38,
+        "limit": "담보인정비율(LTV) 70%"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "아파트담보대출(구입)",
+        "rateMin": 4.3,
+        "rateMax": 4.3,
+        "limit": "LTV 최대 70%, 최대 10억원"
+      },
+      {
+        "bank": "한국산업은행",
+        "name": "산은 주택대출\n(생활자금)",
+        "rateMin": 4.35,
+        "rateMax": 5.94,
+        "limit": "- LTV 70% 등"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한주택대출",
+        "rateMin": 4.36,
+        "rateMax": 4.96,
+        "limit": "-LTV40%"
+      },
+      {
+        "bank": "국민은행",
+        "name": "KB주택담보대출변동\n(일반자금)",
+        "rateMin": 4.41,
+        "rateMax": 5.56,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "수협은행",
+        "name": "SH으뜸모기지론",
+        "rateMin": 4.52,
+        "rateMax": 6.11,
+        "limit": "담보인정비율(LTV) 최대 70%"
+      },
+      {
+        "bank": "광주은행",
+        "name": "KJB셀렉트 주택담보대출",
+        "rateMin": 4.75,
+        "rateMax": 5.88,
+        "limit": "감정가액 x 담보인정비율(LTV) 이내"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "IM주택담보대출_금융채5년변동(생활)",
+        "rateMin": 4.82,
+        "rateMax": 5.72,
+        "limit": "담보인정비율(LTV) 70%"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "IM주택담보대출_금융채5년변동(구입)",
+        "rateMin": 4.82,
+        "rateMax": 5.72,
+        "limit": "담보인정비율(LTV) 70%"
+      },
+      {
+        "bank": "제주은행",
+        "name": "제주장기모기지론",
+        "rateMin": 4.82,
+        "rateMax": 5.82,
+        "limit": "감정가의 70%이내"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "아파트담보대출(일반)",
+        "rateMin": 4.86,
+        "rateMax": 4.86,
+        "limit": "LTV 최대 70%, \n신규 - 최대 2억원, \n대환 - 최대 10억원"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "장기모기지론_금융채5년변동(생활)",
+        "rateMin": 5.04,
+        "rateMax": 6.14,
+        "limit": "담보인정비율(LTV) 70%"
+      },
+      {
+        "bank": "아이엠뱅크",
+        "name": "장기모기지론_금융채5년변동(구입)",
+        "rateMin": 5.04,
+        "rateMax": 6.14,
+        "limit": "담보인정비율(LTV) 70%"
+      }
+    ],
+    "mortgageMixed": [
+      {
+        "bank": "전북은행",
+        "name": "JB해피홈론",
+        "rateMin": 3.84,
+        "rateMax": 5.84,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "전북은행",
+        "name": "JB우리집대출",
+        "rateMin": 4.08,
+        "rateMax": 6.08,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리아파트론",
+        "rateMin": 4.3,
+        "rateMax": 6.6,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한주택대출(아파트)",
+        "rateMin": 4.7,
+        "rateMax": 5.3,
+        "limit": "-LTV40%"
+      },
+      {
+        "bank": "경남은행",
+        "name": "집집마다 도움대출II",
+        "rateMin": 4.73,
+        "rateMax": 7.14,
+        "limit": "LTV 80% 이내"
+      },
+      {
+        "bank": "경남은행",
+        "name": "BNK모바일주택담보대출",
+        "rateMin": 4.73,
+        "rateMax": 7.56,
+        "limit": "LTV 70% 이내(KB시세 확인 가능한 아파트만 가능)"
+      },
+      {
+        "bank": "신한은행",
+        "name": "신한주택대출",
+        "rateMin": 4.8,
+        "rateMax": 5.4,
+        "limit": "-LTV40%"
+      },
+      {
+        "bank": "농협은행주식회사",
+        "name": "NH주택담보대출",
+        "rateMin": 4.82,
+        "rateMax": 7.42,
+        "limit": "해당 주택의 담보평가금액에 따라 산출된 가능금액 이내"
+      },
+      {
+        "bank": "주식회사 하나은행",
+        "name": "하나원큐아파트론2",
+        "rateMin": 4.88,
+        "rateMax": 6.08,
+        "limit": "담보별 가용가 범위내"
+      },
+      {
+        "bank": "부산은행",
+        "name": "ONE주택담보대출",
+        "rateMin": 4.91,
+        "rateMax": 6.21,
+        "limit": "지역에 따라 담보인정비율(LTV) 최대 80% 이내"
+      },
+      {
+        "bank": "주식회사 카카오뱅크",
+        "name": "주택담보대출",
+        "rateMin": 4.93,
+        "rateMax": 5.74,
+        "limit": "최대 10억원"
+      },
+      {
+        "bank": "부산은행",
+        "name": "BNK357금리안심모기지론",
+        "rateMin": 5.01,
+        "rateMax": 6.61,
+        "limit": "지역에 따라 담보인정비율(LTV) 최대 80% 이내"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "아파트담보대출(일반)",
+        "rateMin": 5.05,
+        "rateMax": 5.05,
+        "limit": "LTV 최대 70%, \n신규 - 최대 2억원, \n대환 - 최대 10억원"
+      },
+      {
+        "bank": "한국산업은행",
+        "name": "산은 주택대출\n(생활자금)",
+        "rateMin": 5.13,
+        "rateMax": 6.4,
+        "limit": "- LTV 70% 등"
+      },
+      {
+        "bank": "전북은행",
+        "name": "BEST고정금리모기지론",
+        "rateMin": 5.21,
+        "rateMax": 6.51,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "광주은행",
+        "name": "KJB셀렉트 주택담보대출",
+        "rateMin": 5.25,
+        "rateMax": 6.39,
+        "limit": "감정가액 x 담보인정비율(LTV) 이내"
+      },
+      {
+        "bank": "제주은행",
+        "name": "금리safe모기지론",
+        "rateMin": 5.26,
+        "rateMax": 6.64,
+        "limit": "감정가의 70%이내"
+      },
+      {
+        "bank": "수협은행",
+        "name": "SH으뜸모기지론",
+        "rateMin": 5.31,
+        "rateMax": 7.52,
+        "limit": "담보인정비율(LTV) 최대 70%"
+      },
+      {
+        "bank": "중소기업은행",
+        "name": "IBK주택담보대출",
+        "rateMin": 5.37,
+        "rateMax": 6.31,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "주식회사 케이뱅크",
+        "name": "아파트담보대출(구입)",
+        "rateMin": 5.38,
+        "rateMax": 5.38,
+        "limit": "LTV 최대 70%, 최대 10억원"
+      },
+      {
+        "bank": "국민은행",
+        "name": "KB스타 아파트담보대출 혼합금리(주택자금)",
+        "rateMin": 5.57,
+        "rateMax": 5.57,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "우리은행",
+        "name": "우리부동산론",
+        "rateMin": 5.6,
+        "rateMax": 6.8,
+        "limit": "LTV 70%"
+      },
+      {
+        "bank": "농협은행주식회사",
+        "name": "채움고정금리모기지론",
+        "rateMin": 5.99,
+        "rateMax": 7.69,
+        "limit": "해당 주택의 담보평가금액에 따라 산출된 가능금액 이내"
+      }
+    ]
+  }
 }
